@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BookedUp CRM">
+<meta name="theme-color" content="#1a1a1a">
+<title>BookedUp CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --charcoal: #1a1a1a;
+  --charcoal-light: #242424;
+  --charcoal-lighter: #2e2e2e;
+  --charcoal-border: #3a3a3a;
+  --burnt-orange: #e07a3a;
+  --burnt-orange-dim: rgba(224, 122, 58, 0.15);
+  --burnt-orange-glow: rgba(224, 122, 58, 0.25);
+  --amber: #c9943a;
+  --amber-dim: rgba(201, 148, 58, 0.15);
+  --sand: #b8a882;
+  --sand-dim: rgba(184, 168, 130, 0.12);
+  --text-primary: #f0ece4;
+  --text-secondary: #a09a8e;
+  --text-muted: #6b6560;
+  --success: #4a9e6e;
+  --success-dim: rgba(74, 158, 110, 0.15);
+  --danger: #c45454;
+  --danger-dim: rgba(196, 84, 84, 0.15);
+  --info: #5a8fbf;
+  --info-dim: rgba(90, 143, 191, 0.15);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--charcoal);
+  color: var(--text-primary);
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+/* ===== PIN SCREEN ===== */
+#pin-screen {
+  position: fixed; inset: 0; z-index: 1000;
+  background: var(--charcoal);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  transition: opacity 0.4s, transform 0.4s;
+}
+#pin-screen.hidden { opacity: 0; transform: scale(1.05); pointer-events: none; }
+#pin-screen .logo-mark {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px; font-weight: 700;
+  color: var(--burnt-orange);
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+#pin-screen .logo-sub {
+  font-size: 13px; color: var(--text-muted);
+  margin-bottom: 48px; letter-spacing: 2px; text-transform: uppercase;
+}
+.pin-dots {
+  display: flex; gap: 16px; margin-bottom: 40px;
+}
+.pin-dot {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid var(--charcoal-border);
+  transition: all 0.2s;
+}
+.pin-dot.filled {
+  background: var(--burnt-orange);
+  border-color: var(--burnt-orange);
+  box-shadow: 0 0 12px var(--burnt-orange-glow);
+}
+.pin-dot.error {
+  border-color: var(--danger);
+  background: var(--danger);
+  animation: shake 0.4s;
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+.pin-pad {
+  display: grid; grid-template-columns: repeat(3, 72px);
+  gap: 14px;
+}
+.pin-key {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: var(--charcoal-light);
+  border: 1px solid var(--charcoal-border);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 24px; font-weight: 500;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+  -webkit-user-select: none; user-select: none;
+}
+.pin-key:active { background: var(--burnt-orange-dim); border-color: var(--burnt-orange); transform: scale(0.93); }
+.pin-key.empty { visibility: hidden; }
+.pin-key.backspace { font-size: 18px; }
+
+/* ===== APP SHELL ===== */
+#app { display: none; flex-direction: column; min-height: 100dvh; }
+#app.active { display: flex; }
+
+/* Header */
+.app-header {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--charcoal);
+  border-bottom: 1px solid var(--charcoal-border);
+  padding: 16px 20px 0;
+}
+.header-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.header-brand {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 700;
+  color: var(--burnt-orange);
+  letter-spacing: -0.5px;
+}
+.header-actions { display: flex; gap: 8px; }
+.header-btn {
+  width: 38px; height: 38px; border-radius: 10px;
+  background: var(--charcoal-light);
+  border: 1px solid var(--charcoal-border);
+  color: var(--text-secondary);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; transition: all 0.15s;
+}
+.header-btn:active { background: var(--burnt-orange-dim); color: var(--burnt-orange); }
+.header-btn.active-view { background: var(--burnt-orange-dim); color: var(--burnt-orange); border-color: var(--burnt-orange); }
+
+/* Stats bar */
+.stats-bar {
+  display: flex; gap: 6px; margin-bottom: 14px;
+  overflow-x: auto; scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.stats-bar::-webkit-scrollbar { display: none; }
+.stat-chip {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: var(--charcoal-light);
+  border: 1px solid var(--charcoal-border);
+  font-size: 12px; font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.stat-chip .stat-val {
+  color: var(--burnt-orange);
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+/* Pipeline tabs */
+.pipeline-tabs {
+  display: flex; gap: 0;
+  overflow-x: auto; scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.pipeline-tabs::-webkit-scrollbar { display: none; }
+.pipe-tab {
+  flex-shrink: 0;
+  padding: 10px 18px;
+  font-size: 13px; font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  white-space: nowrap;
+  -webkit-user-select: none; user-select: none;
+}
+.pipe-tab:active { color: var(--text-secondary); }
+.pipe-tab.active {
+  color: var(--burnt-orange);
+  border-bottom-color: var(--burnt-orange);
+}
+.pipe-tab .tab-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 9px;
+  background: var(--charcoal-lighter);
+  font-size: 11px; font-weight: 600;
+  margin-left: 6px;
+  color: var(--text-muted);
+}
+.pipe-tab.active .tab-count {
+  background: var(--burnt-orange-dim);
+  color: var(--burnt-orange);
+}
+
+/* ===== CONTENT ===== */
+.content { flex: 1; padding: 16px 16px 100px; }
+
+/* Prospect Cards */
+.prospect-list { display: flex; flex-direction: column; gap: 10px; }
+.prospect-card {
+  background: var(--charcoal-light);
+  border: 1px solid var(--charcoal-border);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+.prospect-card.expanded { border-color: var(--burnt-orange); box-shadow: 0 4px 24px rgba(0,0,0,0.3); }
+
+.card-header {
+  padding: 16px;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 14px;
+  -webkit-user-select: none; user-select: none;
+}
+.card-avatar {
+  width: 42px; height: 42px; border-radius: 12px;
+  background: var(--burnt-orange-dim);
+  color: var(--burnt-orange);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 15px;
+  flex-shrink: 0;
+}
+.card-info { flex: 1; min-width: 0; }
+.card-name {
+  font-weight: 600; font-size: 15px;
+  color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.card-meta {
+  font-size: 12px; color: var(--text-muted);
+  margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.card-chevron {
+  color: var(--text-muted); font-size: 14px;
+  transition: transform 0.2s; flex-shrink: 0;
+}
+.prospect-card.expanded .card-chevron { transform: rotate(180deg); color: var(--burnt-orange); }
+
+/* Expanded card body */
+.card-body {
+  display: none;
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--charcoal-border);
+}
+.prospect-card.expanded .card-body { display: block; }
+
+.detail-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; margin: 14px 0;
+}
+.detail-item { }
+.detail-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 2px; }
+.detail-value { font-size: 13px; color: var(--text-secondary); word-break: break-all; }
+.detail-value a { color: var(--burnt-orange); text-decoration: none; }
+.detail-value.full-width { grid-column: 1 / -1; }
+
+/* Action buttons row */
+.action-row {
+  display: flex; gap: 8px; margin-top: 12px;
+  flex-wrap: wrap;
+}
+.action-btn {
+  flex: 1; min-width: 0;
+  padding: 10px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--charcoal-border);
+  background: var(--charcoal-lighter);
+  color: var(--text-secondary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px; font-weight: 500;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.action-btn:active { transform: scale(0.96); }
+.action-btn.call { border-color: var(--success); color: var(--success); background: var(--success-dim); }
+.action-btn.email { border-color: var(--burnt-orange); color: var(--burnt-orange); background: var(--burnt-orange-dim); }
+.action-btn.dropin { border-color: var(--amber); color: var(--amber); background: var(--amber-dim); }
+.action-btn.voicemail { border-color: var(--info); color: var(--info); background: var(--info-dim); }
+
+/* Status selector */
+.status-selector {
+  display: flex; gap: 6px; margin-top: 12px;
+  flex-wrap: wrap;
+}
+.status-option {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--charcoal-border);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px; font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  transition: all 0.15s;
+}
+.status-option:active { transform: scale(0.95); }
+.status-option.active-status {
+  border-color: var(--burnt-orange);
+  background: var(--burnt-orange-dim);
+  color: var(--burnt-orange);
+}
+
+/* Notes area */
+.notes-section { margin-top: 14px; }
+.notes-section label {
+  font-size: 10px; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--text-muted);
+  display: block; margin-bottom: 6px;
+}
+.notes-textarea {
+  width: 100%; padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--charcoal-border);
+  background: var(--charcoal);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; resize: vertical;
+  min-height: 60px;
+  transition: border-color 0.2s;
+}
+.notes-textarea:focus { outline: none; border-color: var(--burnt-orange); }
+.notes-save {
+  margin-top: 8px;
+  padding: 8px 20px;
+  border-radius: 8px;
+  border: none;
+  background: var(--burnt-orange);
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.notes-save:active { transform: scale(0.96); opacity: 0.85; }
+.notes-save:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Touchpoint history */
+.touchpoint-history { margin-top: 14px; }
+.touchpoint-history .detail-label { margin-bottom: 8px; }
+.tp-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--charcoal-border);
+  font-size: 12px;
+}
+.tp-item:last-child { border-bottom: none; }
+.tp-icon {
+  width: 28px; height: 28px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; flex-shrink: 0;
+}
+.tp-icon.tp-call { background: var(--success-dim); color: var(--success); }
+.tp-icon.tp-email { background: var(--burnt-orange-dim); color: var(--burnt-orange); }
+.tp-icon.tp-dropin { background: var(--amber-dim); color: var(--amber); }
+.tp-icon.tp-voicemail { background: var(--info-dim); color: var(--info); }
+.tp-text { color: var(--text-secondary); line-height: 1.4; }
+.tp-time { color: var(--text-muted); font-size: 11px; margin-top: 2px; }
+
+/* ===== ACTIVITY VIEW ===== */
+.activity-view { display: none; }
+.activity-view.active { display: block; }
+.prospect-view { display: block; }
+.prospect-view.hidden { display: none; }
+
+.activity-item {
+  padding: 14px 16px;
+  background: var(--charcoal-light);
+  border: 1px solid var(--charcoal-border);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.activity-item .activity-time {
+  font-size: 11px; color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ===== EMAIL MODAL ===== */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  display: none; align-items: flex-end; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.modal-sheet {
+  width: 100%; max-width: 500px;
+  max-height: 85dvh;
+  background: var(--charcoal-light);
+  border-radius: 20px 20px 0 0;
+  border: 1px solid var(--charcoal-border);
+  border-bottom: none;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.modal-handle {
+  width: 36px; height: 4px;
+  background: var(--charcoal-border);
+  border-radius: 2px;
+  margin: 10px auto 0;
+}
+.modal-header {
+  padding: 16px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--charcoal-border);
+}
+.modal-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px; font-weight: 600;
+  color: var(--text-primary);
+}
+.modal-close {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--charcoal); border: 1px solid var(--charcoal-border);
+  color: var(--text-muted); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+
+.template-tabs {
+  display: flex; overflow-x: auto; scrollbar-width: none;
+  padding: 12px 20px;
+  gap: 8px;
+}
+.template-tabs::-webkit-scrollbar { display: none; }
+.tmpl-tab {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: var(--charcoal);
+  border: 1px solid var(--charcoal-border);
+  color: var(--text-muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px; font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.tmpl-tab.active {
+  background: var(--burnt-orange-dim);
+  border-color: var(--burnt-orange);
+  color: var(--burnt-orange);
+}
+
+.email-preview {
+  padding: 20px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+.email-preview .email-subject {
+  font-weight: 600; color: var(--text-primary);
+  margin-bottom: 12px; font-size: 14px;
+}
+.email-preview .email-body { white-space: pre-wrap; }
+
+.email-actions {
+  padding: 16px 20px;
+  border-top: 1px solid var(--charcoal-border);
+  display: flex; gap: 10px;
+}
+.email-actions button {
+  flex: 1; padding: 12px;
+  border-radius: 10px;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.email-actions button:active { transform: scale(0.97); }
+.btn-copy {
+  background: var(--burnt-orange);
+  color: #fff;
+}
+.btn-mailto {
+  background: var(--charcoal);
+  border: 1px solid var(--charcoal-border) !important;
+  color: var(--text-secondary);
+}
+
+/* ===== TOAST ===== */
+.toast {
+  position: fixed; bottom: 90px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--charcoal-lighter);
+  border: 1px solid var(--burnt-orange);
+  color: var(--text-primary);
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 13px; font-weight: 500;
+  opacity: 0; pointer-events: none;
+  transition: all 0.3s;
+  z-index: 600;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+  text-align: center; padding: 60px 20px;
+  color: var(--text-muted);
+}
+.empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
+.empty-state p { font-size: 14px; }
+
+/* ===== LOADING ===== */
+.loading-spinner {
+  display: flex; align-items: center; justify-content: center;
+  padding: 60px; color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* ===== SEARCH BAR ===== */
+.search-bar {
+  display: none;
+  padding: 0 16px 12px;
+}
+.search-bar.open { display: block; }
+.search-input {
+  width: 100%; padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--charcoal-border);
+  background: var(--charcoal);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+}
+.search-input:focus { outline: none; border-color: var(--burnt-orange); }
+.search-input::placeholder { color: var(--text-muted); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--charcoal-border); border-radius: 2px; }
+
+/* Quick action fab */
+.fab-add {
+  position: fixed; bottom: 24px; right: 20px;
+  width: 54px; height: 54px; border-radius: 16px;
+  background: var(--burnt-orange);
+  color: #fff; border: none;
+  font-size: 26px; font-weight: 300;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(224, 122, 58, 0.35);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+  z-index: 50;
+}
+.fab-add:active { transform: scale(0.92); }
+
+/* Add prospect modal */
+.add-modal .modal-sheet { max-height: 90dvh; }
+.add-form { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.form-group label {
+  font-size: 11px; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--text-muted);
+  display: block; margin-bottom: 4px;
+}
+.form-group input, .form-group select {
+  width: 100%; padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--charcoal-border);
+  background: var(--charcoal);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+}
+.form-group input:focus, .form-group select:focus { outline: none; border-color: var(--burnt-orange); }
+.form-group select { appearance: none; cursor: pointer; }
+.form-submit {
+  width: 100%; padding: 14px;
+  border-radius: 10px; border: none;
+  background: var(--burnt-orange);
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.form-submit:active { transform: scale(0.97); }
+.form-submit:disabled { opacity: 0.4; }
+</style>
+</head>
+<body>
+
+<!-- PIN SCREEN -->
+<div id="pin-screen">
+  <div class="logo-mark">BookedUp</div>
+  <div class="logo-sub">Sales CRM</div>
+  <div class="pin-dots">
+    <div class="pin-dot" id="dot-0"></div>
+    <div class="pin-dot" id="dot-1"></div>
+    <div class="pin-dot" id="dot-2"></div>
+    <div class="pin-dot" id="dot-3"></div>
+  </div>
+  <div class="pin-pad">
+    <button class="pin-key" onclick="pinPress('1')">1</button>
+    <button class="pin-key" onclick="pinPress('2')">2</button>
+    <button class="pin-key" onclick="pinPress('3')">3</button>
+    <button class="pin-key" onclick="pinPress('4')">4</button>
+    <button class="pin-key" onclick="pinPress('5')">5</button>
+    <button class="pin-key" onclick="pinPress('6')">6</button>
+    <button class="pin-key" onclick="pinPress('7')">7</button>
+    <button class="pin-key" onclick="pinPress('8')">8</button>
+    <button class="pin-key" onclick="pinPress('9')">9</button>
+    <button class="pin-key empty"></button>
+    <button class="pin-key" onclick="pinPress('0')">0</button>
+    <button class="pin-key backspace" onclick="pinBack()">&larr;</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header class="app-header">
+    <div class="header-top">
+      <div class="header-brand">BookedUp</div>
+      <div class="header-actions">
+        <button class="header-btn" id="btn-search" onclick="toggleSearch()" title="Search">&#x1F50D;</button>
+        <button class="header-btn active-view" id="btn-pipeline" onclick="showView('prospects')" title="Pipeline">&#9776;</button>
+        <button class="header-btn" id="btn-activity" onclick="showView('activity')" title="Activity">&#x1F4CB;</button>
+        <button class="header-btn" onclick="refreshData()" title="Refresh">&#x21BB;</button>
+      </div>
+    </div>
+    <div class="stats-bar" id="stats-bar"></div>
+    <div class="pipeline-tabs" id="pipeline-tabs">
+      <div class="pipe-tab active" data-status="all" onclick="filterPipeline('all')">All <span class="tab-count" id="count-all">0</span></div>
+      <div class="pipe-tab" data-status="new" onclick="filterPipeline('new')">New <span class="tab-count" id="count-new">0</span></div>
+      <div class="pipe-tab" data-status="contacted" onclick="filterPipeline('contacted')">Contacted <span class="tab-count" id="count-contacted">0</span></div>
+      <div class="pipe-tab" data-status="interested" onclick="filterPipeline('interested')">Interested <span class="tab-count" id="count-interested">0</span></div>
+      <div class="pipe-tab" data-status="booked" onclick="filterPipeline('booked')">Booked <span class="tab-count" id="count-booked">0</span></div>
+      <div class="pipe-tab" data-status="pass" onclick="filterPipeline('pass')">Pass <span class="tab-count" id="count-pass">0</span></div>
+    </div>
+  </header>
+
+  <div class="search-bar" id="search-bar">
+    <input type="text" class="search-input" id="search-input" placeholder="Search prospects..." oninput="handleSearch(this.value)">
+  </div>
+
+  <main class="content">
+    <div class="prospect-view" id="prospect-view">
+      <div class="prospect-list" id="prospect-list">
+        <div class="loading-spinner">Loading prospects...</div>
+      </div>
+    </div>
+    <div class="activity-view" id="activity-view">
+      <div id="activity-list">
+        <div class="loading-spinner">Loading activity...</div>
+      </div>
+    </div>
+  </main>
+
+  <button class="fab-add" onclick="openAddModal()" title="Add prospect">+</button>
+</div>
+
+<!-- EMAIL TEMPLATE MODAL -->
+<div class="modal-overlay" id="email-modal" onclick="closeEmailModal(event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Email Templates</div>
+      <button class="modal-close" onclick="closeEmailModal()">&times;</button>
+    </div>
+    <div class="template-tabs" id="template-tabs"></div>
+    <div class="email-preview" id="email-preview"></div>
+    <div class="email-actions">
+      <button class="btn-mailto" onclick="openMailTo()">Open in Mail</button>
+      <button class="btn-copy" onclick="copyEmail()">Copy to Clipboard</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PROSPECT MODAL -->
+<div class="modal-overlay add-modal" id="add-modal" onclick="closeAddModal(event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Add Prospect</div>
+      <button class="modal-close" onclick="closeAddModal()">&times;</button>
+    </div>
+    <form class="add-form" onsubmit="submitNewProspect(event)">
+      <div class="form-group">
+        <label>Business Name</label>
+        <input type="text" id="add-name" required>
+      </div>
+      <div class="form-group">
+        <label>Business Type</label>
+        <input type="text" id="add-type" placeholder="HVAC, Plumbing, Landscaping...">
+      </div>
+      <div class="form-group">
+        <label>City</label>
+        <input type="text" id="add-city" value="Mesa">
+      </div>
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="tel" id="add-phone">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="add-email">
+      </div>
+      <div class="form-group">
+        <label>Website</label>
+        <input type="url" id="add-website" placeholder="https://...">
+      </div>
+      <button type="submit" class="form-submit">Add Prospect</button>
+    </form>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== CONFIG =====
+const SUPABASE_URL = 'https://dtwixosmblraxqdvbzah.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_FYZKjKLmCEIj774Lyfjttg_xrvAyp0L';
+const PIN_CODE = '1127';
+
+let prospects = [];
+let activities = [];
+let currentFilter = 'all';
+let searchQuery = '';
+let currentEmailProspect = null;
+let currentTemplateIdx = 0;
+
+// ===== EMAIL TEMPLATES =====
+const EMAIL_TEMPLATES = [
+  {
+    name: 'Cold Intro',
+    subject: (p) => `Quick question for ${p.name}`,
+    body: (p) => `Hey there,
+
+My name is Jacob and I work with a company called BookedUp. We help ${p.type || 'local service'} businesses in the East Valley stay booked without the back-and-forth of phone tag and missed calls.
+
+I came across ${p.name} and figured it might be worth a quick conversation. We set up automated booking, reminders, and follow-ups so your calendar stays full and nothing slips through the cracks.
+
+Would you be open to a 15-minute call this week? No pitch, just want to see if it makes sense.
+
+Jacob Harter
+BookedUp
+jacob@getbookedup.io
+(480) 555-0127`
+  },
+  {
+    name: 'Follow-Up',
+    subject: (p) => `Following up, ${p.name}`,
+    body: (p) => `Hey,
+
+I reached out last week about BookedUp and wanted to circle back. I know things get busy, especially running a ${p.type || 'service'} business.
+
+The short version: we help businesses like yours stop losing jobs to missed calls and slow follow-ups. Everything runs on autopilot once it is set up.
+
+If you have 15 minutes this week I would love to show you how it works. No pressure either way.
+
+Jacob Harter
+BookedUp
+jacob@getbookedup.io`
+  },
+  {
+    name: 'Google Reviews',
+    subject: (p) => `Idea for ${p.name}'s online presence`,
+    body: (p) => `Hey,
+
+I was looking at ${p.name}'s Google profile and noticed you have solid reviews. That is great. Most businesses in the Valley do not even think about it.
+
+One thing we have been doing for our clients is automating review requests after every job. It is a simple text that goes out and it adds up fast. More reviews, better ranking, more calls.
+
+That is just one piece of what we do, but figured it might catch your attention. Worth a quick call?
+
+Jacob Harter
+BookedUp
+jacob@getbookedup.io`
+  },
+  {
+    name: 'After Drop-In',
+    subject: (p) => `Good meeting you today`,
+    body: (p) => `Hey,
+
+Thanks for taking a few minutes to chat today. I know you are busy so I will keep this short.
+
+Like I mentioned, BookedUp handles the scheduling, follow-ups, and reminders so you are not chasing customers or worrying about missed calls. Everything runs in the background.
+
+Here is a link if you want to book a proper walkthrough: https://cal.com/gotbookedup/15min
+
+Either way, good to meet you and I hope ${p.name} keeps crushing it.
+
+Jacob Harter
+BookedUp
+jacob@getbookedup.io`
+  }
+];
+
+// ===== SUPABASE HELPERS =====
+async function supaFetch(table, options = {}) {
+  let url = `${SUPABASE_URL}/rest/v1/${table}`;
+  const params = new URLSearchParams();
+  if (options.select) params.set('select', options.select);
+  if (options.order) params.set('order', options.order);
+  if (options.limit) params.set('limit', options.limit);
+  if (options.filters) {
+    for (const [k, v] of Object.entries(options.filters)) {
+      params.set(k, v);
+    }
+  }
+  const qs = params.toString();
+  if (qs) url += '?' + qs;
+
+  const headers = {
+    'apikey': SUPABASE_KEY,
+    'Authorization': `Bearer ${SUPABASE_KEY}`,
+    'Content-Type': 'application/json',
+    'Prefer': options.prefer || 'return=representation'
+  };
+
+  const res = await fetch(url, {
+    method: options.method || 'GET',
+    headers,
+    body: options.body ? JSON.stringify(options.body) : undefined
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Supabase error: ${res.status} ${err}`);
+  }
+  return res.json();
+}
+
+// ===== PIN LOGIN =====
+let pinEntry = '';
+function pinPress(digit) {
+  if (pinEntry.length >= 4) return;
+  pinEntry += digit;
+  updateDots();
+  if (pinEntry.length === 4) {
+    setTimeout(() => {
+      if (pinEntry === PIN_CODE) {
+        document.getElementById('pin-screen').classList.add('hidden');
+        document.getElementById('app').classList.add('active');
+        loadData();
+      } else {
+        document.querySelectorAll('.pin-dot').forEach(d => d.classList.add('error'));
+        setTimeout(() => {
+          pinEntry = '';
+          updateDots();
+          document.querySelectorAll('.pin-dot').forEach(d => d.classList.remove('error'));
+        }, 500);
+      }
+    }, 150);
+  }
+}
+function pinBack() {
+  pinEntry = pinEntry.slice(0, -1);
+  updateDots();
+}
+function updateDots() {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById(`dot-${i}`);
+    dot.classList.toggle('filled', i < pinEntry.length);
+  }
+}
+
+// ===== DATA LOADING =====
+async function loadData() {
+  try {
+    const [p, a] = await Promise.all([
+      supaFetch('prospects', { select: '*', order: 'id.asc' }),
+      supaFetch('activity_log', { select: '*', order: 'created_at.desc', limit: '50' })
+    ]);
+    prospects = p || [];
+    activities = a || [];
+    renderStats();
+    renderPipeline();
+    renderActivity();
+  } catch (err) {
+    console.error('Load error:', err);
+    document.getElementById('prospect-list').innerHTML =
+      '<div class="empty-state"><p>Could not connect to database. Pull down to retry.</p></div>';
+  }
+}
+
+async function refreshData() {
+  showToast('Refreshing...');
+  await loadData();
+  showToast('Up to date');
+}
+
+// ===== STATS =====
+function renderStats() {
+  const total = prospects.length;
+  const statuses = {};
+  prospects.forEach(p => {
+    const s = (p.status || 'new').toLowerCase();
+    statuses[s] = (statuses[s] || 0) + 1;
+  });
+  const bar = document.getElementById('stats-bar');
+  bar.innerHTML = `
+    <div class="stat-chip"><span class="stat-val">${total}</span> Total</div>
+    <div class="stat-chip"><span class="stat-val">${statuses.booked || 0}</span> Booked</div>
+    <div class="stat-chip"><span class="stat-val">${statuses.interested || 0}</span> Hot</div>
+    <div class="stat-chip"><span class="stat-val">${statuses.contacted || 0}</span> Contacted</div>
+    <div class="stat-chip"><span class="stat-val">${statuses.new || 0}</span> New</div>
+  `;
+  // Tab counts
+  document.getElementById('count-all').textContent = total;
+  ['new','contacted','interested','booked','pass'].forEach(s => {
+    document.getElementById(`count-${s}`).textContent = statuses[s] || 0;
+  });
+}
+
+// ===== PIPELINE RENDERING =====
+function getFilteredProspects() {
+  let list = prospects;
+  if (currentFilter !== 'all') {
+    list = list.filter(p => (p.status || 'new').toLowerCase() === currentFilter);
+  }
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    list = list.filter(p =>
+      (p.name || '').toLowerCase().includes(q) ||
+      (p.type || '').toLowerCase().includes(q) ||
+      (p.city || '').toLowerCase().includes(q)
+    );
+  }
+  return list;
+}
+
+function filterPipeline(status) {
+  currentFilter = status;
+  document.querySelectorAll('.pipe-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.status === status);
+  });
+  renderPipeline();
+}
+
+function renderPipeline() {
+  const list = getFilteredProspects();
+  const container = document.getElementById('prospect-list');
+
+  if (list.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">&#9900;</div><p>No prospects in this pipeline</p></div>`;
+    return;
+  }
+
+  container.innerHTML = list.map(p => {
+    const initials = (p.name || '??').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const status = (p.status || 'new').toLowerCase();
+    const touchpoints = p.touchpoints || [];
+    const lastTouch = touchpoints.length > 0 ? touchpoints[touchpoints.length - 1] : null;
+    const touchMeta = lastTouch ? `Last: ${lastTouch.type} ${timeAgo(lastTouch.date)}` : 'No touchpoints yet';
+
+    return `
+    <div class="prospect-card" id="card-${p.id}">
+      <div class="card-header" onclick="toggleCard(${p.id})">
+        <div class="card-avatar">${initials}</div>
+        <div class="card-info">
+          <div class="card-name">${esc(p.name)}</div>
+          <div class="card-meta">${esc(p.type || '')} ${p.city ? '&middot; ' + esc(p.city) : ''} &middot; ${touchMeta}</div>
+        </div>
+        <div class="card-chevron">&#x25BC;</div>
+      </div>
+      <div class="card-body">
+        <div class="detail-grid">
+          <div class="detail-item">
+            <div class="detail-label">Phone</div>
+            <div class="detail-value">${p.phone ? `<a href="tel:${p.phone}">${esc(p.phone)}</a>` : 'N/A'}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Email</div>
+            <div class="detail-value">${p.email ? `<a href="mailto:${p.email}">${esc(p.email)}</a>` : 'N/A'}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Website</div>
+            <div class="detail-value">${p.website ? `<a href="${p.website}" target="_blank">${esc(p.website.replace(/^https?:\/\//, ''))}</a>` : 'N/A'}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">City</div>
+            <div class="detail-value">${esc(p.city || 'N/A')}</div>
+          </div>
+        </div>
+
+        <div class="detail-label">Status</div>
+        <div class="status-selector">
+          ${['new','contacted','interested','booked','pass'].map(s =>
+            `<button class="status-option ${status === s ? 'active-status' : ''}" onclick="changeStatus(${p.id}, '${s}')">${s}</button>`
+          ).join('')}
+        </div>
+
+        <div class="action-row">
+          <button class="action-btn call" onclick="logTouch(${p.id}, 'call')">&#9742; Call</button>
+          <button class="action-btn email" onclick="openEmailModal(${p.id})">&#9993; Email</button>
+          <button class="action-btn dropin" onclick="logTouch(${p.id}, 'drop-in')">&#9899; Drop-in</button>
+          <button class="action-btn voicemail" onclick="logTouch(${p.id}, 'voicemail')">&#9836; VM</button>
+        </div>
+
+        <div class="notes-section">
+          <label>Notes</label>
+          <textarea class="notes-textarea" id="notes-${p.id}" onfocus="this.nextElementSibling.disabled=false">${esc(p.notes || '')}</textarea>
+          <button class="notes-save" disabled onclick="saveNotes(${p.id})">Save Notes</button>
+        </div>
+
+        ${touchpoints.length > 0 ? `
+        <div class="touchpoint-history">
+          <div class="detail-label">Touchpoint History</div>
+          ${touchpoints.slice().reverse().slice(0, 8).map(tp => `
+            <div class="tp-item">
+              <div class="tp-icon tp-${tp.type === 'drop-in' ? 'dropin' : tp.type}">${tpIcon(tp.type)}</div>
+              <div>
+                <div class="tp-text">${esc(tp.type)} logged</div>
+                <div class="tp-time">${formatDate(tp.date)}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCard(id) {
+  const card = document.getElementById(`card-${id}`);
+  const wasExpanded = card.classList.contains('expanded');
+  // Collapse all
+  document.querySelectorAll('.prospect-card.expanded').forEach(c => c.classList.remove('expanded'));
+  // Toggle current
+  if (!wasExpanded) {
+    card.classList.add('expanded');
+    setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  }
+}
+
+// ===== STATUS CHANGE =====
+async function changeStatus(id, newStatus) {
+  const prospect = prospects.find(p => p.id === id);
+  if (!prospect || prospect.status === newStatus) return;
+
+  const oldStatus = prospect.status;
+  prospect.status = newStatus;
+  renderStats();
+  renderPipeline();
+  // Re-expand the card
+  setTimeout(() => {
+    const card = document.getElementById(`card-${id}`);
+    if (card) card.classList.add('expanded');
+  }, 50);
+
+  try {
+    await supaFetch('prospects', {
+      method: 'PATCH',
+      filters: { id: `eq.${id}` },
+      body: { status: newStatus }
+    });
+    await logActivity(`${prospect.name} moved from ${oldStatus} to ${newStatus}`);
+    showToast(`${prospect.name} → ${newStatus}`);
+  } catch (err) {
+    console.error('Status update error:', err);
+    showToast('Failed to update status');
+  }
+}
+
+// ===== TOUCHPOINTS =====
+async function logTouch(id, type) {
+  const prospect = prospects.find(p => p.id === id);
+  if (!prospect) return;
+
+  const touchpoints = prospect.touchpoints || [];
+  const newTp = { type, date: new Date().toISOString() };
+  touchpoints.push(newTp);
+  prospect.touchpoints = touchpoints;
+
+  // Auto-move from "new" to "contacted" on first touchpoint
+  if ((prospect.status || 'new') === 'new') {
+    prospect.status = 'contacted';
+  }
+
+  renderStats();
+  renderPipeline();
+  setTimeout(() => {
+    const card = document.getElementById(`card-${id}`);
+    if (card) card.classList.add('expanded');
+  }, 50);
+
+  try {
+    await supaFetch('prospects', {
+      method: 'PATCH',
+      filters: { id: `eq.${id}` },
+      body: { touchpoints, status: prospect.status }
+    });
+    await logActivity(`${type} logged for ${prospect.name}`);
+    showToast(`${type} logged for ${prospect.name}`);
+  } catch (err) {
+    console.error('Touch log error:', err);
+    showToast('Failed to log touchpoint');
+  }
+}
+
+// ===== NOTES =====
+async function saveNotes(id) {
+  const textarea = document.getElementById(`notes-${id}`);
+  const notes = textarea.value;
+  const prospect = prospects.find(p => p.id === id);
+  if (!prospect) return;
+
+  prospect.notes = notes;
+  textarea.nextElementSibling.disabled = true;
+
+  try {
+    await supaFetch('prospects', {
+      method: 'PATCH',
+      filters: { id: `eq.${id}` },
+      body: { notes }
+    });
+    showToast('Notes saved');
+  } catch (err) {
+    console.error('Notes save error:', err);
+    showToast('Failed to save notes');
+  }
+}
+
+// ===== EMAIL MODAL =====
+function openEmailModal(id) {
+  currentEmailProspect = prospects.find(p => p.id === id);
+  if (!currentEmailProspect) return;
+  currentTemplateIdx = 0;
+  renderTemplates();
+  document.getElementById('email-modal').classList.add('open');
+}
+function closeEmailModal(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('email-modal').classList.remove('open');
+}
+
+function renderTemplates() {
+  const tabs = document.getElementById('template-tabs');
+  tabs.innerHTML = EMAIL_TEMPLATES.map((t, i) =>
+    `<button class="tmpl-tab ${i === currentTemplateIdx ? 'active' : ''}" onclick="selectTemplate(${i})">${t.name}</button>`
+  ).join('');
+  renderEmailPreview();
+}
+function selectTemplate(i) {
+  currentTemplateIdx = i;
+  renderTemplates();
+}
+function renderEmailPreview() {
+  const t = EMAIL_TEMPLATES[currentTemplateIdx];
+  const p = currentEmailProspect;
+  document.getElementById('email-preview').innerHTML = `
+    <div class="email-subject">${esc(t.subject(p))}</div>
+    <div class="email-body">${esc(t.body(p))}</div>
+  `;
+}
+function copyEmail() {
+  const t = EMAIL_TEMPLATES[currentTemplateIdx];
+  const p = currentEmailProspect;
+  const text = `Subject: ${t.subject(p)}\n\n${t.body(p)}`;
+  navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard'));
+}
+function openMailTo() {
+  const t = EMAIL_TEMPLATES[currentTemplateIdx];
+  const p = currentEmailProspect;
+  const subject = encodeURIComponent(t.subject(p));
+  const body = encodeURIComponent(t.body(p));
+  const email = p.email || '';
+  window.open(`mailto:${email}?subject=${subject}&body=${body}`);
+}
+
+// ===== ADD PROSPECT =====
+function openAddModal() { document.getElementById('add-modal').classList.add('open'); }
+function closeAddModal(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('add-modal').classList.remove('open');
+}
+async function submitNewProspect(e) {
+  e.preventDefault();
+  const btn = e.target.querySelector('.form-submit');
+  btn.disabled = true;
+  btn.textContent = 'Adding...';
+
+  const newProspect = {
+    name: document.getElementById('add-name').value.trim(),
+    type: document.getElementById('add-type').value.trim(),
+    city: document.getElementById('add-city').value.trim(),
+    phone: document.getElementById('add-phone').value.trim(),
+    email: document.getElementById('add-email').value.trim(),
+    website: document.getElementById('add-website').value.trim(),
+    status: 'new',
+    notes: '',
+    touchpoints: []
+  };
+
+  try {
+    const result = await supaFetch('prospects', {
+      method: 'POST',
+      body: newProspect,
+      prefer: 'return=representation'
+    });
+    if (result && result.length > 0) {
+      prospects.push(result[0]);
+    }
+    await logActivity(`New prospect added: ${newProspect.name}`);
+    renderStats();
+    renderPipeline();
+    showToast(`${newProspect.name} added`);
+    e.target.reset();
+    document.getElementById('add-city').value = 'Mesa';
+    closeAddModal();
+  } catch (err) {
+    console.error('Add prospect error:', err);
+    showToast('Failed to add prospect');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Add Prospect';
+  }
+}
+
+// ===== ACTIVITY =====
+function renderActivity() {
+  const container = document.getElementById('activity-list');
+  if (activities.length === 0) {
+    container.innerHTML = '<div class="empty-state"><p>No activity yet</p></div>';
+    return;
+  }
+  container.innerHTML = activities.map(a => `
+    <div class="activity-item">
+      ${esc(a.text)}
+      <div class="activity-time">${formatDate(a.created_at)}</div>
+    </div>
+  `).join('');
+}
+
+async function logActivity(text) {
+  try {
+    const result = await supaFetch('activity_log', {
+      method: 'POST',
+      body: { text },
+      prefer: 'return=representation'
+    });
+    if (result && result.length > 0) {
+      activities.unshift(result[0]);
+      renderActivity();
+    }
+  } catch (err) {
+    console.error('Activity log error:', err);
+  }
+}
+
+// ===== VIEW SWITCHING =====
+function showView(view) {
+  const pv = document.getElementById('prospect-view');
+  const av = document.getElementById('activity-view');
+  const btnP = document.getElementById('btn-pipeline');
+  const btnA = document.getElementById('btn-activity');
+
+  if (view === 'prospects') {
+    pv.classList.remove('hidden');
+    av.classList.remove('active');
+    btnP.classList.add('active-view');
+    btnA.classList.remove('active-view');
+  } else {
+    pv.classList.add('hidden');
+    av.classList.add('active');
+    btnP.classList.remove('active-view');
+    btnA.classList.add('active-view');
+  }
+}
+
+// ===== SEARCH =====
+function toggleSearch() {
+  const bar = document.getElementById('search-bar');
+  bar.classList.toggle('open');
+  if (bar.classList.contains('open')) {
+    document.getElementById('search-input').focus();
+  } else {
+    document.getElementById('search-input').value = '';
+    searchQuery = '';
+    renderPipeline();
+  }
+}
+function handleSearch(val) {
+  searchQuery = val;
+  renderPipeline();
+}
+
+// ===== UTILITIES =====
+function esc(str) {
+  const d = document.createElement('div');
+  d.textContent = str || '';
+  return d.innerHTML;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function timeAgo(dateStr) {
+  if (!dateStr) return '';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' +
+    d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+function tpIcon(type) {
+  switch(type) {
+    case 'call': return '&#9742;';
+    case 'email': return '&#9993;';
+    case 'drop-in': return '&#9899;';
+    case 'voicemail': return '&#9836;';
+    default: return '&#8226;';
+  }
+}
+</script>
+</body>
+</html>
