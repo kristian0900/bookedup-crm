@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>New Job — Ace Handyman</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --charcoal: #1a1a1a;
+            --charcoal-light: #242424;
+            --charcoal-lighter: #2e2e2e;
+            --charcoal-border: #3a3a3a;
+            --burnt-orange: #c45a2d;
+            --burnt-orange-light: #d4713f;
+            --burnt-orange-dim: rgba(196, 90, 45, 0.12);
+            --cream: #f5f0e8;
+            --cream-dim: #bfb9ae;
+            --cream-muted: #8a847b;
+            --green: #3d9a5f;
+            --green-bg: rgba(61, 154, 95, 0.12);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'DM Sans', -apple-system, sans-serif;
+            background: var(--charcoal);
+            color: var(--cream);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--charcoal) 0%, var(--charcoal-light) 100%);
+            border-bottom: 3px solid var(--burnt-orange);
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4em;
+            font-weight: 800;
+        }
+        .header h1 span { color: var(--burnt-orange); }
+        .header a {
+            color: var(--cream-muted);
+            text-decoration: none;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        .header a:hover { color: var(--cream); }
+
+        .page { padding: 24px; max-width: 540px; margin: 0 auto; }
+
+        .page-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4em;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: var(--cream);
+        }
+
+        .form-group { margin-bottom: 20px; }
+        .form-label {
+            display: block;
+            font-size: 0.75em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--cream-muted);
+            margin-bottom: 6px;
+        }
+        .form-label .required { color: var(--burnt-orange); }
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--charcoal-light);
+            border: 1px solid var(--charcoal-border);
+            border-radius: 8px;
+            color: var(--cream);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.15s;
+            -webkit-appearance: none;
+        }
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            border-color: var(--burnt-orange);
+        }
+        .form-input::placeholder, .form-textarea::placeholder {
+            color: var(--cream-muted);
+            opacity: 0.6;
+        }
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+        .form-select {
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a847b' fill='none' stroke-width='2'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 40px;
+        }
+        .form-select option {
+            background: var(--charcoal-light);
+            color: var(--cream);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--burnt-orange);
+            color: var(--cream);
+            border: none;
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1.05em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: opacity 0.15s;
+            margin-top: 8px;
+        }
+        .submit-btn:hover { opacity: 0.9; }
+        .submit-btn:active { opacity: 0.75; }
+
+        /* Confirmation */
+        .confirmation {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .confirm-check {
+            width: 64px; height: 64px;
+            border-radius: 50%;
+            background: var(--green-bg);
+            border: 3px solid var(--green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 1.6em;
+            color: var(--green);
+        }
+        .confirm-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5em;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .confirm-wo {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2em;
+            font-weight: 800;
+            color: var(--burnt-orange);
+            margin-bottom: 8px;
+        }
+        .confirm-text {
+            color: var(--cream-muted);
+            font-size: 0.9em;
+            margin-bottom: 28px;
+            line-height: 1.5;
+        }
+        .confirm-actions { display: flex; gap: 12px; justify-content: center; }
+        .confirm-btn {
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9em;
+            font-weight: 700;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border: none;
+        }
+        .confirm-btn-primary {
+            background: var(--burnt-orange);
+            color: var(--cream);
+        }
+        .confirm-btn-secondary {
+            background: var(--charcoal-lighter);
+            border: 1px solid var(--charcoal-border);
+            color: var(--cream-dim);
+        }
+
+        .powered-by {
+            text-align: center;
+            padding: 32px;
+            font-size: 0.7em;
+            color: var(--charcoal-border);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .powered-by span { color: var(--burnt-orange); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Ace <span>Handyman</span></h1>
+        <a href="/">Back to Jobs</a>
+    </div>
+
+    <div class="page">
+        {% if created_id %}
+        <!-- Confirmation -->
+        <div class="confirmation">
+            <div class="confirm-check">&#10003;</div>
+            <div class="confirm-title">Job Created</div>
+            <div class="confirm-wo">WO #{{ created_id }}</div>
+            <div class="confirm-text">Work order has been submitted and assigned to JR.</div>
+            <div class="confirm-actions">
+                <a href="/new-job" class="confirm-btn confirm-btn-primary">Add Another</a>
+                <a href="/" class="confirm-btn confirm-btn-secondary">View Jobs</a>
+            </div>
+        </div>
+
+        {% else %}
+        <!-- Form -->
+        <div class="page-title">New Work Order</div>
+
+        <form method="POST" action="/new-job">
+            <div class="form-group">
+                <label class="form-label">Customer Name <span class="required">*</span></label>
+                <input type="text" name="customer_name" class="form-input" placeholder="e.g. John Smith" required autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input type="tel" name="phone" class="form-input" placeholder="480-555-1234" autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Address</label>
+                <input type="text" name="address" class="form-input" placeholder="123 Main St, Mesa AZ" autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">What's the problem? <span class="required">*</span></label>
+                <textarea name="description" class="form-textarea" placeholder="Describe the issue..." required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Priority</label>
+                <select name="priority" class="form-select">
+                    <option value="normal">Normal</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                </select>
+            </div>
+
+            <button type="submit" class="submit-btn">Submit Work Order</button>
+        </form>
+        {% endif %}
+
+        <div class="powered-by">Powered by <span>BookedUp</span></div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ace Handyman — Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --charcoal: #1a1a1a;
+            --charcoal-light: #242424;
+            --charcoal-border: #3a3a3a;
+            --burnt-orange: #c45a2d;
+            --cream: #f5f0e8;
+            --cream-muted: #8a847b;
+            --red: #c44040;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'DM Sans', -apple-system, sans-serif;
+            background: var(--charcoal);
+            color: var(--cream);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-box {
+            background: var(--charcoal-light);
+            border: 1px solid var(--charcoal-border);
+            border-radius: 16px;
+            padding: 40px 36px;
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+        }
+        .login-box h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6em;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+        .login-box h1 span { color: var(--burnt-orange); }
+        .login-sub {
+            color: var(--cream-muted);
+            font-size: 0.85em;
+            margin-bottom: 28px;
+        }
+        .pin-input {
+            width: 100%;
+            padding: 16px;
+            background: var(--charcoal);
+            border: 1px solid var(--charcoal-border);
+            border-radius: 10px;
+            color: var(--cream);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1.3em;
+            text-align: center;
+            letter-spacing: 6px;
+            font-weight: 700;
+            outline: none;
+            margin-bottom: 16px;
+            -webkit-appearance: none;
+        }
+        .pin-input:focus { border-color: var(--burnt-orange); }
+        .pin-input::placeholder { letter-spacing: 2px; font-size: 0.7em; font-weight: 400; color: var(--cream-muted); opacity: 0.5; }
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--burnt-orange);
+            color: var(--cream);
+            border: none;
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+        }
+        .login-btn:hover { opacity: 0.9; }
+        .error-msg {
+            color: var(--red);
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .powered {
+            margin-top: 24px;
+            font-size: 0.65em;
+            color: var(--charcoal-border);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .powered span { color: var(--burnt-orange); }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h1>Ace <span>Handyman</span></h1>
+        <div class="login-sub">Enter your PIN to continue</div>
+        {% if error %}
+        <div class="error-msg">{{ error }}</div>
+        {% endif %}
+        <form method="POST" action="/login">
+            <input type="password" name="pin" class="pin-input" placeholder="PIN" autofocus autocomplete="off" inputmode="text">
+            <button type="submit" class="login-btn">Sign In</button>
+        </form>
+    </div>
+    <div class="powered">Powered by <span>BookedUp</span></div>
+</body>
+</html>

@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ace Handyman Services — Job Board</title>
+    <meta http-equiv="refresh" content="15">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --charcoal: #1a1a1a;
+            --charcoal-light: #242424;
+            --charcoal-lighter: #2e2e2e;
+            --charcoal-border: #3a3a3a;
+            --burnt-orange: #c45a2d;
+            --burnt-orange-light: #d4713f;
+            --burnt-orange-dim: rgba(196, 90, 45, 0.12);
+            --cream: #f5f0e8;
+            --cream-dim: #bfb9ae;
+            --cream-muted: #8a847b;
+            --green: #3d9a5f;
+            --green-bg: rgba(61, 154, 95, 0.12);
+            --red: #c44040;
+            --red-bg: rgba(196, 64, 64, 0.12);
+            --amber: #c49a2d;
+            --amber-bg: rgba(196, 154, 45, 0.12);
+            --blue: #4a8ac4;
+            --blue-bg: rgba(74, 138, 196, 0.12);
+            --gray: #6b7280;
+            --gray-bg: rgba(107, 114, 128, 0.12);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', -apple-system, sans-serif;
+            background: var(--charcoal);
+            color: var(--cream);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--charcoal) 0%, var(--charcoal-light) 100%);
+            border-bottom: 3px solid var(--burnt-orange);
+            padding: 28px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-left h1 {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 1.9em;
+            font-weight: 800;
+            color: var(--cream);
+            letter-spacing: -0.5px;
+        }
+        .header-left h1 span { color: var(--burnt-orange); }
+        .header-left .tagline {
+            font-size: 0.8em;
+            color: var(--cream-muted);
+            margin-top: 4px;
+            font-weight: 500;
+        }
+        .header-right {
+            text-align: right;
+        }
+        .header-right .date {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1em;
+            color: var(--cream-dim);
+        }
+        .header-right .time {
+            font-size: 0.8em;
+            color: var(--cream-muted);
+            margin-top: 2px;
+        }
+
+        .page { padding: 28px 40px; }
+
+        /* Status flow */
+        .status-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            margin-bottom: 32px;
+            padding: 20px 0;
+        }
+        .flow-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            min-width: 120px;
+        }
+        .flow-circle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 1.1em;
+            border: 2px solid var(--charcoal-border);
+            background: var(--charcoal-light);
+            color: var(--cream-muted);
+        }
+        .flow-circle.active { border-color: var(--burnt-orange); color: var(--burnt-orange); background: var(--burnt-orange-dim); }
+        .flow-label {
+            font-size: 0.72em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--cream-muted);
+        }
+        .flow-label.active { color: var(--burnt-orange-light); }
+        .flow-arrow {
+            width: 40px;
+            height: 2px;
+            background: var(--charcoal-border);
+            margin-bottom: 28px;
+        }
+
+        /* Summary cards row */
+        .summary-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        .summary-card {
+            flex: 1;
+            background: var(--charcoal-light);
+            border: 1px solid var(--charcoal-border);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        .summary-card .num {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2em;
+            font-weight: 700;
+        }
+        .summary-card .label {
+            font-size: 0.72em;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--cream-muted);
+            font-weight: 600;
+            margin-top: 4px;
+        }
+        .summary-card.active .num { color: var(--burnt-orange); }
+        .summary-card.done .num { color: var(--green); }
+        .summary-card.total .num { color: var(--cream-dim); }
+
+        /* Section header */
+        .section-header {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.15em;
+            font-weight: 700;
+            color: var(--cream);
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--charcoal-border);
+        }
+
+        /* Job cards grid */
+        .jobs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 16px;
+            margin-bottom: 36px;
+        }
+
+        .job-card {
+            background: var(--charcoal-light);
+            border: 1px solid var(--charcoal-border);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: border-color 0.2s;
+        }
+        .job-card:hover { border-color: var(--burnt-orange); }
+        .job-card.priority-high { border-left: 3px solid var(--red); }
+
+        .job-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .job-id {
+            font-family: 'DM Sans', monospace;
+            font-weight: 700;
+            color: var(--burnt-orange);
+            font-size: 0.85em;
+        }
+        .job-status {
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 0.72em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .job-status.new { background: var(--burnt-orange-dim); color: var(--burnt-orange-light); }
+        .job-status.scheduled { background: var(--blue-bg); color: var(--blue); }
+        .job-status.in_progress { background: var(--amber-bg); color: var(--amber); }
+        .job-status.on_hold { background: var(--gray-bg); color: var(--gray); }
+        .job-status.completed { background: var(--green-bg); color: var(--green); }
+
+        .job-customer {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1em;
+            font-weight: 700;
+            color: var(--cream);
+        }
+        .job-address {
+            font-size: 0.82em;
+            color: var(--cream-muted);
+        }
+        .job-description {
+            font-size: 0.9em;
+            color: var(--cream-dim);
+            line-height: 1.5;
+        }
+        .job-notes {
+            font-size: 0.8em;
+            color: var(--cream-muted);
+            background: var(--charcoal);
+            border-radius: 6px;
+            padding: 10px 12px;
+            line-height: 1.5;
+            white-space: pre-line;
+        }
+        .job-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 8px;
+            border-top: 1px solid var(--charcoal-border);
+        }
+        .job-assigned {
+            font-size: 0.8em;
+            color: var(--cream-muted);
+        }
+        .job-assigned strong { color: var(--cream-dim); }
+        .job-date {
+            font-size: 0.75em;
+            color: var(--cream-muted);
+        }
+        .job-priority {
+            font-size: 0.7em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .job-priority.high { color: var(--red); }
+        .job-priority.normal { color: var(--cream-muted); }
+        .job-priority.low { color: var(--cream-muted); }
+
+        /* Job action buttons */
+        .job-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-top: 10px;
+        }
+        .job-action-btn {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: opacity 0.15s;
+            text-align: center;
+        }
+        .job-action-btn:hover { opacity: 0.85; }
+        .job-action-btn:active { opacity: 0.7; transform: scale(0.98); }
+        .job-action-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+        .job-action-btn.schedule { background: rgba(74,138,196,0.2); color: var(--blue); border: 1px solid rgba(74,138,196,0.3); }
+        .job-action-btn.start { background: rgba(196,154,45,0.2); color: var(--amber); border: 1px solid rgba(196,154,45,0.3); }
+        .job-action-btn.complete { background: rgba(61,154,95,0.2); color: var(--green); border: 1px solid rgba(61,154,95,0.3); }
+        .job-action-btn.reopen { background: rgba(196,90,45,0.15); color: var(--burnt-orange-light); border: 1px solid rgba(196,90,45,0.3); }
+        .job-hold-link {
+            font-size: 0.72em;
+            color: var(--cream-muted);
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .job-hold-link:hover { color: var(--cream-dim); text-decoration: underline; }
+
+        /* Completed section */
+        .completed-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .completed-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--charcoal-light);
+            border: 1px solid var(--charcoal-border);
+            border-radius: 8px;
+        }
+        .completed-info { display: flex; align-items: center; gap: 12px; }
+        .completed-check {
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            background: var(--green-bg);
+            border: 2px solid var(--green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--green);
+            font-size: 0.7em;
+            font-weight: 700;
+        }
+        .completed-name {
+            font-weight: 600;
+            font-size: 0.9em;
+            color: var(--cream-dim);
+        }
+        .completed-desc {
+            font-size: 0.82em;
+            color: var(--cream-muted);
+        }
+        .completed-date {
+            font-size: 0.75em;
+            color: var(--cream-muted);
+        }
+
+        .new-job-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: var(--burnt-orange);
+            color: var(--cream);
+            text-decoration: none;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: opacity 0.15s;
+        }
+        .new-job-btn:hover { opacity: 0.9; }
+        .new-job-btn .plus {
+            font-size: 1.2em;
+            font-weight: 800;
+        }
+
+        .powered-by {
+            text-align: center;
+            padding: 24px;
+            font-size: 0.7em;
+            color: var(--charcoal-border);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .powered-by span { color: var(--burnt-orange); }
+
+        .empty-state {
+            color: var(--cream-muted);
+            font-style: italic;
+            text-align: center;
+            padding: 32px;
+            font-size: 0.9em;
+        }
+
+        /* Collapsible completed section */
+        .completed-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 14px 0;
+            border-top: 1px solid var(--charcoal-border);
+            margin-top: 20px;
+            user-select: none;
+        }
+        .completed-header:hover .completed-title { color: var(--cream); }
+        .completed-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.05em;
+            font-weight: 700;
+            color: var(--cream-dim);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .completed-count {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.7em;
+            font-weight: 700;
+            background: var(--green-bg);
+            color: var(--green);
+            padding: 3px 10px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .completed-chevron {
+            color: var(--cream-muted);
+            font-size: 0.8em;
+            transition: transform 0.2s;
+        }
+        .completed-section.open .completed-chevron { transform: rotate(180deg); }
+        .completed-body {
+            display: none;
+            padding-bottom: 8px;
+        }
+        .completed-section.open .completed-body { display: block; }
+
+        .completed-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            background: var(--charcoal-light);
+            border: 1px solid var(--charcoal-border);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        .completed-left { display: flex; align-items: center; gap: 14px; flex: 1; }
+        .completed-check {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            background: var(--green-bg);
+            border: 2px solid var(--green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--green);
+            font-size: 0.75em;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .completed-details { flex: 1; }
+        .completed-name {
+            font-weight: 600;
+            font-size: 0.9em;
+            color: var(--cream);
+        }
+        .completed-desc {
+            font-size: 0.82em;
+            color: var(--cream-muted);
+            margin-top: 2px;
+        }
+        .completed-right {
+            text-align: right;
+            flex-shrink: 0;
+            margin-left: 16px;
+        }
+        .completed-time {
+            font-size: 0.78em;
+            color: var(--cream-muted);
+        }
+        .completed-detail-link {
+            font-size: 0.72em;
+            color: var(--burnt-orange-light);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .completed-detail-link:hover { text-decoration: underline; }
+        .completed-expand {
+            display: none;
+            margin-top: 10px;
+            padding: 10px 14px;
+            background: var(--charcoal);
+            border-radius: 6px;
+            font-size: 0.8em;
+            color: var(--cream-dim);
+            line-height: 1.6;
+        }
+        .completed-card.detail-open .completed-expand { display: block; }
+
+        /* Schedule inline form */
+        .schedule-form {
+            display: none;
+            background: var(--charcoal);
+            border: 1px solid var(--charcoal-border);
+            border-radius: 8px;
+            padding: 14px;
+            margin-top: 4px;
+        }
+        .schedule-form.open { display: block; }
+        .sched-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .sched-field { flex: 1; }
+        .sched-field.full { flex: 1 1 100%; }
+        .sched-label {
+            font-size: 0.68em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--cream-muted);
+            margin-bottom: 4px;
+        }
+        .sched-input, .sched-select, .sched-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--charcoal-light);
+            border: 1px solid var(--charcoal-border);
+            border-radius: 6px;
+            color: var(--cream);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9em;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        .sched-input:focus, .sched-select:focus, .sched-textarea:focus { border-color: var(--burnt-orange); }
+        .sched-textarea { min-height: 50px; resize: vertical; }
+        .sched-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .sched-submit {
+            flex: 1;
+            padding: 11px;
+            background: rgba(74,138,196,0.2);
+            color: var(--blue);
+            border: 1px solid rgba(74,138,196,0.3);
+            border-radius: 6px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+        }
+        .sched-submit:hover { opacity: 0.85; }
+        .sched-submit:disabled { opacity: 0.4; cursor: default; }
+        .sched-cancel {
+            padding: 11px 16px;
+            background: none;
+            color: var(--cream-muted);
+            border: 1px solid var(--charcoal-border);
+            border-radius: 6px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Scheduled badge on card */
+        .job-scheduled {
+            background: rgba(74,138,196,0.1);
+            border: 1px solid rgba(74,138,196,0.2);
+            border-radius: 6px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85em;
+            color: var(--blue);
+            font-weight: 600;
+        }
+        .job-scheduled .sched-icon {
+            font-size: 1.1em;
+        }
+
+        @media (max-width: 768px) {
+            .header { padding: 20px; flex-direction: column; gap: 12px; text-align: center; }
+            .header-right { flex-direction: column; gap: 10px; justify-content: center; }
+            .page { padding: 20px; }
+            .summary-row { flex-direction: column; }
+            .jobs-grid { grid-template-columns: 1fr; }
+            .status-flow { flex-wrap: wrap; gap: 4px; }
+            .flow-arrow { width: 20px; }
+            .completed-card { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .completed-right { text-align: left; margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <h1>Ace <span>Handyman</span> Services</h1>
+            <div class="tagline">East Valley Job Board</div>
+        </div>
+        <div class="header-right" style="display: flex; align-items: center; gap: 16px;">
+            <a href="/new-job" class="new-job-btn"><span class="plus">+</span> New Job</a>
+            <div style="text-align: right;">
+                <div class="date">{{ date_display }}</div>
+                <div class="time">Updated {{ time_display }}</div>
+            </div>
+            <a href="/logout" style="color: var(--cream-muted); text-decoration: none; font-size: 0.75em; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; padding: 8px 12px; border: 1px solid var(--charcoal-border); border-radius: 6px;">Logout</a>
+        </div>
+    </div>
+
+    <div class="page">
+        <!-- Status Flow -->
+        <div class="status-flow">
+            {% for step in flow_steps %}
+            <div class="flow-step">
+                <div class="flow-circle {{ 'active' if step.count > 0 else '' }}">{{ step.count }}</div>
+                <div class="flow-label {{ 'active' if step.count > 0 else '' }}">{{ step.label }}</div>
+            </div>
+            {% if not loop.last %}
+            <div class="flow-arrow"></div>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Summary Row -->
+        <div class="summary-row">
+            <div class="summary-card active">
+                <div class="num">{{ active_count }}</div>
+                <div class="label">Active Jobs</div>
+            </div>
+            <div class="summary-card done">
+                <div class="num">{{ completed_today }}</div>
+                <div class="label">Done Today</div>
+            </div>
+            <div class="summary-card done">
+                <div class="num">{{ completed_week }}</div>
+                <div class="label">Done This Week</div>
+            </div>
+            <div class="summary-card total">
+                <div class="num">{{ total_wo }}</div>
+                <div class="label">All Time</div>
+            </div>
+        </div>
+
+        <!-- Active Jobs -->
+        <div class="section-header">Active Jobs</div>
+        {% if active_orders %}
+        <div class="jobs-grid" id="active-grid">
+            {% for wo in active_orders %}
+            <div class="job-card {{ 'priority-high' if wo.priority in ('high', 'urgent') else '' }}" id="wo-{{ wo.id }}">
+                <div class="job-top">
+                    <span class="job-id">WO #{{ wo.id }}</span>
+                    <span class="job-status {{ wo.status }}" id="wo-badge-{{ wo.id }}">{{ wo.status_display }}</span>
+                </div>
+                <div class="job-customer">{{ wo.customer_name }}</div>
+                {% if wo.address %}
+                <div class="job-address">{{ wo.address }}</div>
+                {% endif %}
+                <div class="job-description">{{ wo.description }}</div>
+                {% if wo.scheduled_for and wo.status == 'scheduled' %}
+                <div class="job-scheduled">
+                    <span class="sched-icon">&#128197;</span>
+                    {{ wo.scheduled_for }}
+                </div>
+                {% endif %}
+                {% if wo.notes %}
+                <div class="job-notes">{{ wo.notes }}</div>
+                {% endif %}
+                <div class="job-footer">
+                    <span class="job-assigned">Assigned to <strong>{{ wo.assigned_to }}</strong></span>
+                    <span class="job-date">{{ wo.created_str }}</span>
+                    {% if wo.priority in ('high', 'urgent') %}
+                    <span class="job-priority high">{{ wo.priority }}</span>
+                    {% endif %}
+                </div>
+                <div class="job-actions">
+                    {% if wo.status == 'new' %}
+                    <button class="job-action-btn schedule" onclick="toggleScheduleForm({{ wo.id }})">Schedule Job</button>
+                    {% elif wo.status == 'scheduled' %}
+                    <button class="job-action-btn start" onclick="updateJob({{ wo.id }}, 'in_progress', this)">Start Job</button>
+                    {% elif wo.status == 'in_progress' %}
+                    <button class="job-action-btn complete" onclick="updateJob({{ wo.id }}, 'completed', this)">Mark Complete</button>
+                    {% endif %}
+                    <a class="job-hold-link" onclick="updateJob({{ wo.id }}, 'on_hold', this)">Put on Hold</a>
+                </div>
+                {% if wo.status == 'new' %}
+                <div class="schedule-form" id="sched-form-{{ wo.id }}">
+                    <div class="sched-row">
+                        <div class="sched-field">
+                            <div class="sched-label">Date</div>
+                            <input type="date" class="sched-input" id="sched-date-{{ wo.id }}" value="{{ tomorrow }}">
+                        </div>
+                        <div class="sched-field">
+                            <div class="sched-label">Time</div>
+                            <select class="sched-select" id="sched-time-{{ wo.id }}">
+                                <option value="Morning (8AM-12PM)">Morning 8-12</option>
+                                <option value="Afternoon (12PM-4PM)">Afternoon 12-4</option>
+                                <option value="Late Afternoon (4PM-6PM)">Late Afternoon 4-6</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="sched-row">
+                        <div class="sched-field full">
+                            <div class="sched-label">Notes (optional)</div>
+                            <textarea class="sched-textarea" id="sched-notes-{{ wo.id }}" placeholder="e.g. need to pick up parts first"></textarea>
+                        </div>
+                    </div>
+                    <div class="sched-actions">
+                        <button class="sched-submit" onclick="submitSchedule({{ wo.id }}, this)">Confirm Schedule</button>
+                        <button class="sched-cancel" onclick="toggleScheduleForm({{ wo.id }})">Cancel</button>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-state" id="empty-active">No active jobs right now.</p>
+        {% endif %}
+
+        <!-- Completed This Week (collapsible) -->
+        {% if completed_orders %}
+        <div class="completed-section" id="completed-section">
+            <div class="completed-header" onclick="document.getElementById('completed-section').classList.toggle('open')">
+                <div class="completed-title">
+                    Completed This Week
+                    <span class="completed-count">{{ completed_orders | length }} jobs</span>
+                </div>
+                <span class="completed-chevron">&#9660;</span>
+            </div>
+            <div class="completed-body">
+                {% for wo in completed_orders %}
+                <div class="completed-card" id="completed-{{ wo.id }}">
+                    <div class="completed-left">
+                        <div class="completed-check">&#10003;</div>
+                        <div class="completed-details">
+                            <div class="completed-name">{{ wo.customer_name }}</div>
+                            <div class="completed-desc">{{ wo.description }}</div>
+                        </div>
+                    </div>
+                    <div class="completed-right">
+                        <div class="completed-time">{{ wo.completed_str }}</div>
+                        <div style="display: flex; gap: 10px; margin-top: 4px;">
+                            <span class="completed-detail-link" onclick="event.stopPropagation(); document.getElementById('completed-{{ wo.id }}').classList.toggle('detail-open')">details</span>
+                            <span class="completed-detail-link" style="color: var(--amber);" onclick="event.stopPropagation(); updateJob({{ wo.id }}, 'new', this)">reopen</span>
+                        </div>
+                    </div>
+                    <div class="completed-expand">
+                        <strong>WO #{{ wo.id }}</strong><br>
+                        {% if wo.address %}Address: {{ wo.address }}<br>{% endif %}
+                        Assigned to: {{ wo.assigned_to }}<br>
+                        Created: {{ wo.created_str }}<br>
+                        Completed: {{ wo.completed_str }}
+                        {% if wo.notes %}<br><br>Notes:<br>{{ wo.notes }}{% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="powered-by">Powered by <span>BookedUp</span></div>
+    </div>
+
+    <script>
+    function toggleScheduleForm(woId) {
+        const form = document.getElementById('sched-form-' + woId);
+        form.classList.toggle('open');
+    }
+
+    async function submitSchedule(woId, btn) {
+        if (btn.disabled) return;
+        btn.disabled = true;
+        btn.textContent = 'Scheduling...';
+
+        const schedDate = document.getElementById('sched-date-' + woId).value;
+        const schedTime = document.getElementById('sched-time-' + woId).value;
+        const schedNotes = document.getElementById('sched-notes-' + woId).value;
+
+        try {
+            const resp = await fetch('/api/wo/' + woId + '/schedule', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ date: schedDate, time_slot: schedTime, notes: schedNotes })
+            });
+            const data = await resp.json();
+            if (data.ok) {
+                location.reload();
+            } else {
+                btn.textContent = 'Error';
+                setTimeout(() => { btn.textContent = 'Confirm Schedule'; btn.disabled = false; }, 2000);
+            }
+        } catch (e) {
+            btn.textContent = 'Error';
+            setTimeout(() => { btn.textContent = 'Confirm Schedule'; btn.disabled = false; }, 2000);
+        }
+    }
+
+    async function updateJob(woId, newStatus, btn) {
+        if (btn.disabled) return;
+        btn.disabled = true;
+        const origText = btn.textContent;
+        btn.textContent = 'Updating...';
+
+        try {
+            const resp = await fetch('/api/wo/' + woId + '/status/' + newStatus, { method: 'POST' });
+            const data = await resp.json();
+            if (data.ok) {
+                location.reload();
+            } else {
+                btn.textContent = 'Error';
+                setTimeout(() => { btn.textContent = origText; btn.disabled = false; }, 2000);
+            }
+        } catch (e) {
+            btn.textContent = 'Error';
+            setTimeout(() => { btn.textContent = origText; btn.disabled = false; }, 2000);
+        }
+    }
+    </script>
+</body>
+</html>

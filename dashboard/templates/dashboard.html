@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookedUp — Agent Dashboard</title>
+    <meta http-equiv="refresh" content="30">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --charcoal: #1a1a1a;
+            --charcoal-light: #242424;
+            --charcoal-lighter: #2e2e2e;
+            --charcoal-border: #3a3a3a;
+            --burnt-orange: #c45a2d;
+            --burnt-orange-light: #d4713f;
+            --burnt-orange-dim: rgba(196, 90, 45, 0.15);
+            --cream: #f5f0e8;
+            --cream-dim: #bfb9ae;
+            --cream-muted: #8a847b;
+            --green: #3d9a5f;
+            --green-bg: rgba(61, 154, 95, 0.15);
+            --red: #c44040;
+            --red-bg: rgba(196, 64, 64, 0.15);
+            --amber: #c49a2d;
+            --amber-bg: rgba(196, 154, 45, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', -apple-system, sans-serif;
+            background: var(--charcoal);
+            color: var(--cream);
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--charcoal) 0%, var(--charcoal-light) 100%);
+            border-bottom: 2px solid var(--burnt-orange);
+            padding: 24px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-left { display: flex; align-items: baseline; gap: 16px; }
+        .header h1 {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 1.8em;
+            font-weight: 800;
+            color: var(--cream);
+            letter-spacing: -0.5px;
+        }
+        .header h1 span { color: var(--burnt-orange); }
+        .header .subtitle {
+            font-size: 0.85em;
+            color: var(--cream-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .header .timestamp {
+            font-size: 0.8em;
+            color: var(--cream-muted);
+            font-family: 'DM Sans', monospace;
+        }
+
+        /* Layout */
+        .dashboard { padding: 24px 40px; }
+
+        /* Summary bar */
+        .summary-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .summary-pill {
+            background: var(--charcoal-light);
+            border: 1px solid var(--charcoal-border);
+            border-radius: 8px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 140px;
+        }
+        .summary-pill .pill-num {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6em;
+            font-weight: 700;
+            color: var(--burnt-orange);
+        }
+        .summary-pill .pill-label {
+            font-size: 0.75em;
+            color: var(--cream-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        /* Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .grid-full { grid-column: 1 / -1; }
+
+        /* Cards */
+        .card {
+            background: var(--charcoal-light);
+            border-radius: 12px;
+            border: 1px solid var(--charcoal-border);
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--charcoal-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.05em;
+            font-weight: 700;
+            color: var(--cream);
+        }
+        .card-header .badge {
+            font-size: 0.7em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: var(--burnt-orange-dim);
+            color: var(--burnt-orange-light);
+        }
+        .card-body { padding: 16px 20px; }
+
+        /* Agent rows */
+        .agent-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--charcoal-border);
+        }
+        .agent-row:last-child { border-bottom: none; }
+        .agent-info { display: flex; align-items: center; gap: 10px; }
+        .agent-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .agent-dot.running { background: var(--green); box-shadow: 0 0 6px var(--green); }
+        .agent-dot.stopped { background: var(--red); }
+        .agent-dot.error { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+        .agent-name {
+            font-weight: 600;
+            font-size: 0.9em;
+            color: var(--cream);
+        }
+        .agent-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status-tag {
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 0.75em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-tag.running { background: var(--green-bg); color: var(--green); }
+        .status-tag.stopped { background: var(--red-bg); color: var(--red); }
+        .status-tag.error { background: var(--amber-bg); color: var(--amber); }
+        .ago-text {
+            font-size: 0.75em;
+            color: var(--cream-muted);
+            min-width: 50px;
+            text-align: right;
+        }
+
+        /* Work order stats */
+        .wo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .wo-stat {
+            text-align: center;
+            padding: 14px 8px;
+            background: var(--charcoal);
+            border-radius: 8px;
+            border: 1px solid var(--charcoal-border);
+        }
+        .wo-stat .num {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6em;
+            font-weight: 700;
+            color: var(--burnt-orange);
+        }
+        .wo-stat .label {
+            font-size: 0.7em;
+            color: var(--cream-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+            font-weight: 600;
+        }
+        .wo-stat.highlight .num { color: var(--green); }
+
+        /* Work order table */
+        .wo-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .wo-table th {
+            text-align: left;
+            font-size: 0.7em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--cream-muted);
+            font-weight: 600;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--charcoal-border);
+        }
+        .wo-table td {
+            padding: 10px 12px;
+            font-size: 0.85em;
+            border-bottom: 1px solid var(--charcoal-border);
+            color: var(--cream-dim);
+        }
+        .wo-table tr:last-child td { border-bottom: none; }
+        .wo-table .wo-id {
+            font-weight: 700;
+            color: var(--burnt-orange);
+            font-family: 'DM Sans', monospace;
+        }
+        .wo-table .wo-status {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        .wo-status-new { background: var(--burnt-orange-dim); color: var(--burnt-orange-light); }
+        .wo-status-scheduled { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+        .wo-status-in_progress { background: var(--amber-bg); color: var(--amber); }
+        .wo-status-on_hold { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+        .wo-status-completed { background: var(--green-bg); color: var(--green); }
+        .wo-status-cancelled { background: var(--red-bg); color: var(--red); }
+        .priority-high { color: var(--red) !important; font-weight: 700; }
+        .priority-normal { color: var(--cream-dim); }
+        .priority-low { color: var(--cream-muted); }
+
+        /* Prospect pipeline */
+        .prospect-item { border-bottom: 1px solid var(--charcoal-border); }
+        .prospect-item:last-child { border-bottom: none; }
+        .prospect-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            cursor: pointer;
+            transition: background 0.15s;
+            padding-left: 8px;
+            padding-right: 8px;
+            margin: 0 -8px;
+            border-radius: 6px;
+        }
+        .prospect-row:hover { background: var(--charcoal-lighter); }
+        .prospect-info { flex: 1; }
+        .prospect-name { font-weight: 600; font-size: 0.9em; color: var(--cream); }
+        .prospect-biz { font-size: 0.8em; color: var(--cream-muted); }
+        .prospect-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .prospect-chevron {
+            color: var(--cream-muted);
+            font-size: 0.7em;
+            transition: transform 0.2s;
+            margin-left: 6px;
+        }
+        .prospect-item.open .prospect-chevron { transform: rotate(90deg); }
+        .step-bar {
+            display: flex;
+            gap: 3px;
+        }
+        .step-dot {
+            width: 14px;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--charcoal-border);
+        }
+        .step-dot.done { background: var(--burnt-orange); }
+        .step-dot.current { background: var(--burnt-orange-light); box-shadow: 0 0 4px var(--burnt-orange); }
+        .overdue-badge {
+            font-size: 0.7em;
+            font-weight: 700;
+            color: var(--red);
+            text-transform: uppercase;
+        }
+        .due-badge {
+            font-size: 0.7em;
+            font-weight: 700;
+            color: var(--amber);
+            text-transform: uppercase;
+        }
+
+        /* Prospect detail panel */
+        .prospect-detail {
+            display: none;
+            padding: 12px 8px 16px;
+            margin: 0 -8px;
+        }
+        .prospect-item.open .prospect-detail { display: block; }
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 20px;
+            margin-bottom: 14px;
+        }
+        .detail-field {
+            font-size: 0.8em;
+        }
+        .detail-label {
+            color: var(--cream-muted);
+            font-size: 0.7em;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        .detail-value {
+            color: var(--cream-dim);
+        }
+        .detail-step-box {
+            background: var(--charcoal);
+            border: 1px solid var(--charcoal-border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+        }
+        .detail-step-label {
+            font-size: 0.7em;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--burnt-orange-light);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .detail-step-action {
+            font-size: 0.85em;
+            color: var(--cream);
+        }
+        .detail-notes {
+            font-size: 0.8em;
+            color: var(--cream-muted);
+            background: var(--charcoal);
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 14px;
+            white-space: pre-line;
+            line-height: 1.5;
+        }
+        .detail-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.75em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: none;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: opacity 0.15s;
+        }
+        .btn:hover { opacity: 0.85; }
+        .btn:active { opacity: 0.7; }
+        .btn-primary { background: var(--burnt-orange); color: var(--cream); }
+        .btn-secondary { background: var(--charcoal-border); color: var(--cream-dim); }
+        .btn-danger { background: var(--red-bg); color: var(--red); border: 1px solid rgba(196,64,64,0.3); }
+
+        /* Events feed */
+        .event-list { max-height: 420px; overflow-y: auto; }
+        .event-list::-webkit-scrollbar { width: 4px; }
+        .event-list::-webkit-scrollbar-track { background: var(--charcoal); }
+        .event-list::-webkit-scrollbar-thumb { background: var(--charcoal-border); border-radius: 2px; }
+        .event-row {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            padding: 7px 0;
+            border-bottom: 1px solid var(--charcoal);
+            font-size: 0.82em;
+        }
+        .event-row:last-child { border-bottom: none; }
+        .event-time {
+            font-family: 'DM Sans', monospace;
+            color: var(--cream-muted);
+            flex-shrink: 0;
+            font-size: 0.9em;
+        }
+        .event-source {
+            color: var(--burnt-orange-light);
+            font-weight: 600;
+            flex-shrink: 0;
+            min-width: 100px;
+        }
+        .event-type {
+            color: var(--cream-dim);
+            flex-shrink: 0;
+        }
+        .event-detail {
+            color: var(--cream-muted);
+            font-size: 0.9em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .empty-state {
+            color: var(--cream-muted);
+            font-style: italic;
+            padding: 20px 0;
+            text-align: center;
+            font-size: 0.85em;
+        }
+
+        @media (max-width: 768px) {
+            .header { padding: 16px 20px; flex-direction: column; gap: 8px; }
+            .dashboard { padding: 16px 20px; }
+            .grid { grid-template-columns: 1fr; }
+            .summary-bar { flex-direction: column; }
+            .wo-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <h1>Booked<span>Up</span></h1>
+            <span class="subtitle">Agent Dashboard</span>
+        </div>
+        <div class="timestamp">{{ now }}</div>
+    </div>
+
+    <div class="dashboard">
+        <!-- Summary Pills -->
+        <div class="summary-bar">
+            <div class="summary-pill">
+                <span class="pill-num">{{ agents | length }}</span>
+                <span class="pill-label">Agents<br>Online</span>
+            </div>
+            <div class="summary-pill">
+                <span class="pill-num">{{ wo_stats.get('new', 0) + wo_stats.get('scheduled', 0) + wo_stats.get('in_progress', 0) }}</span>
+                <span class="pill-label">Active<br>Jobs</span>
+            </div>
+            <div class="summary-pill">
+                <span class="pill-num">{{ wo_stats.get('completed', 0) }}</span>
+                <span class="pill-label">Jobs<br>Done</span>
+            </div>
+            <div class="summary-pill">
+                <span class="pill-num">{{ prospect_count }}</span>
+                <span class="pill-label">Active<br>Prospects</span>
+            </div>
+            <div class="summary-pill">
+                <span class="pill-num">{{ total_wo }}</span>
+                <span class="pill-label">Total<br>Work Orders</span>
+            </div>
+        </div>
+
+        <!-- Top row: Agents + Work Order Stats -->
+        <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Agent Status</h2>
+                    <span class="badge">Live</span>
+                </div>
+                <div class="card-body">
+                    {% for agent in agents %}
+                    <div class="agent-row">
+                        <div class="agent-info">
+                            <div class="agent-dot {{ agent.status or 'stopped' }}"></div>
+                            <span class="agent-name">{{ agent.agent_name }}</span>
+                        </div>
+                        <div class="agent-meta">
+                            <span class="status-tag {{ agent.status or 'stopped' }}">{{ agent.status or 'stopped' }}</span>
+                            <span class="ago-text">{{ agent.ago_str }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% if not agents %}
+                    <p class="empty-state">No agents reporting yet</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Work Orders</h2>
+                    <span class="badge">{{ total_wo }} Total</span>
+                </div>
+                <div class="card-body">
+                    <div class="wo-grid">
+                        <div class="wo-stat">
+                            <div class="num">{{ wo_stats.get('new', 0) }}</div>
+                            <div class="label">New</div>
+                        </div>
+                        <div class="wo-stat">
+                            <div class="num">{{ wo_stats.get('scheduled', 0) }}</div>
+                            <div class="label">Scheduled</div>
+                        </div>
+                        <div class="wo-stat">
+                            <div class="num">{{ wo_stats.get('in_progress', 0) }}</div>
+                            <div class="label">In Progress</div>
+                        </div>
+                        <div class="wo-stat">
+                            <div class="num">{{ wo_stats.get('on_hold', 0) }}</div>
+                            <div class="label">On Hold</div>
+                        </div>
+                        <div class="wo-stat highlight">
+                            <div class="num">{{ wo_stats.get('completed', 0) }}</div>
+                            <div class="label">Completed</div>
+                        </div>
+                        <div class="wo-stat">
+                            <div class="num">{{ wo_stats.get('cancelled', 0) }}</div>
+                            <div class="label">Cancelled</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Work Orders Table -->
+        <div class="grid">
+            <div class="card grid-full">
+                <div class="card-header">
+                    <h2>Recent Work Orders</h2>
+                    <span class="badge">Ace Handyman</span>
+                </div>
+                <div class="card-body" style="padding: 0;">
+                    {% if work_orders %}
+                    <table class="wo-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Customer</th>
+                                <th>Issue</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Assigned</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for wo in work_orders %}
+                            <tr>
+                                <td class="wo-id">#{{ wo.id }}</td>
+                                <td style="color: var(--cream);">{{ wo.customer_name }}</td>
+                                <td>{{ wo.description[:45] }}{% if wo.description|length > 45 %}...{% endif %}</td>
+                                <td><span class="wo-status wo-status-{{ wo.status }}">{{ wo.status }}</span></td>
+                                <td class="priority-{{ wo.priority }}">{{ wo.priority }}</td>
+                                <td>{{ wo.assigned_to }}</td>
+                                <td>{{ wo.created_str }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p class="empty-state">No work orders yet. Send /job via Telegram to create one.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom row: Prospects + Events -->
+        <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Prospect Pipeline</h2>
+                    <span class="badge">{{ prospect_count }} Active</span>
+                </div>
+                <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                    {% if prospects %}
+                    {% for p in prospects %}
+                    <div class="prospect-item" id="prospect-{{ p.id }}">
+                        <div class="prospect-row" onclick="toggleProspect({{ p.id }})">
+                            <div class="prospect-info">
+                                <div class="prospect-name">{{ p.name }}</div>
+                                {% if p.business_name %}
+                                <div class="prospect-biz">{{ p.business_name }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="prospect-step">
+                                <div class="step-bar">
+                                    {% for i in range(7) %}
+                                    <div class="step-dot {% if i < p.current_step %}done{% elif i == p.current_step %}current{% endif %}"></div>
+                                    {% endfor %}
+                                </div>
+                                {% if p.overdue > 0 %}
+                                <span class="overdue-badge">{{ p.overdue }}d late</span>
+                                {% elif p.overdue == 0 %}
+                                <span class="due-badge">Due</span>
+                                {% endif %}
+                                <span class="prospect-chevron">&#9654;</span>
+                            </div>
+                        </div>
+                        <div class="prospect-detail">
+                            <div class="detail-grid">
+                                <div class="detail-field">
+                                    <div class="detail-label">Industry</div>
+                                    <div class="detail-value">{{ p.industry or 'N/A' }}</div>
+                                </div>
+                                <div class="detail-field">
+                                    <div class="detail-label">Location</div>
+                                    <div class="detail-value">{{ p.location or 'N/A' }}</div>
+                                </div>
+                                <div class="detail-field">
+                                    <div class="detail-label">Phone</div>
+                                    <div class="detail-value">{{ p.phone or 'N/A' }}</div>
+                                </div>
+                                <div class="detail-field">
+                                    <div class="detail-label">Email</div>
+                                    <div class="detail-value">{{ p.email or 'N/A' }}</div>
+                                </div>
+                                <div class="detail-field">
+                                    <div class="detail-label">Next Touch</div>
+                                    <div class="detail-value">{{ p.next_touch_str }}</div>
+                                </div>
+                                <div class="detail-field">
+                                    <div class="detail-label">Last Contact</div>
+                                    <div class="detail-value">{{ p.last_contact_str }}</div>
+                                </div>
+                            </div>
+                            <div class="detail-step-box">
+                                <div class="detail-step-label">Step {{ p.current_step + 1 }} of 7</div>
+                                <div class="detail-step-action">{{ p.step_action }}</div>
+                            </div>
+                            {% if p.notes %}
+                            <div class="detail-notes">{{ p.notes }}</div>
+                            {% endif %}
+                            <div class="detail-actions">
+                                <button class="btn btn-primary" onclick="prospectAction({{ p.id }}, 'contacted', event)">Mark Contacted</button>
+                                <button class="btn btn-secondary" onclick="prospectAction({{ p.id }}, 'skip', event)">Skip Step</button>
+                                <button class="btn btn-danger" onclick="if(confirm('Remove this prospect?')) prospectAction({{ p.id }}, 'remove', event)">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="empty-state">No prospects yet. Send /prospect add via Telegram.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Event Feed</h2>
+                    <span class="badge">Last {{ events | length }}</span>
+                </div>
+                <div class="card-body" style="padding: 8px 20px;">
+                    <div class="event-list">
+                        {% for event in events %}
+                        <div class="event-row">
+                            <span class="event-time">{{ event.time_str }}</span>
+                            <span class="event-source">{{ event.source }}</span>
+                            <span class="event-type">{{ event.event_type }}</span>
+                            {% if event.detail %}
+                            <span class="event-detail">{{ event.detail }}</span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        {% if not events %}
+                        <p class="empty-state">No events yet</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function toggleProspect(id) {
+        const el = document.getElementById('prospect-' + id);
+        el.classList.toggle('open');
+    }
+
+    async function prospectAction(id, action, event) {
+        event.stopPropagation();
+        try {
+            const resp = await fetch('/api/prospect/' + id + '/' + action, { method: 'POST' });
+            const data = await resp.json();
+            if (data.ok) {
+                if (action === 'remove') {
+                    document.getElementById('prospect-' + id).remove();
+                } else {
+                    location.reload();
+                }
+            }
+        } catch (e) {
+            console.error('Action failed:', e);
+        }
+    }
+    </script>
+</body>
+</html>
