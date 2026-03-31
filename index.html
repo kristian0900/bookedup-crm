@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a1a1a">
+<meta name="apple-mobile-web-app-title" content="BookedUp">
+<title>BookedUp CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#1a1a1a;--bg2:#242424;--bg3:#2e2e2e;--bg4:#383838;
+--orange:#e07a3a;--amber:#c9943a;--sand:#b8a882;
+--text:#f0ece4;--text2:#a8a298;--text3:#706b63;
+--green:#5a9a6a;--red:#c45050;
+--radius:14px;--radius-sm:10px;
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);-webkit-tap-highlight-color:transparent;position:relative}
+h1,h2,h3,.brand{font-family:'Playfair Display',serif}
+input,textarea,select,button{font-family:inherit;font-size:inherit}
+button{cursor:pointer;border:none;background:none;color:inherit}
+
+/* PIN SCREEN */
+#pin-screen{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .4s,transform .4s}
+#pin-screen.hidden{opacity:0;transform:scale(1.05);pointer-events:none}
+#pin-screen .brand{font-size:28px;color:var(--orange);margin-bottom:8px}
+#pin-screen .subtitle{color:var(--text2);font-size:14px;margin-bottom:40px}
+.pin-dots{display:flex;gap:16px;margin-bottom:40px}
+.pin-dots .dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--sand);transition:background .15s,border-color .15s}
+.pin-dots .dot.filled{background:var(--orange);border-color:var(--orange)}
+.numpad{display:grid;grid-template-columns:repeat(3,72px);gap:14px}
+.numpad button{width:72px;height:72px;border-radius:50%;font-size:26px;font-weight:600;background:var(--bg3);color:var(--text);transition:background .12s,transform .1s}
+.numpad button:active{background:var(--bg4);transform:scale(.93)}
+.numpad .del{font-size:16px;color:var(--text2)}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-12px)}40%,80%{transform:translateX(12px)}}
+.shake{animation:shake .45s ease}
+
+/* MAIN APP */
+#app{display:none;height:100%;flex-direction:column}
+#app.visible{display:flex}
+
+/* HEADER */
+.header{padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top));display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-bottom:1px solid var(--bg3);flex-shrink:0}
+.header .brand{font-size:20px;color:var(--orange)}
+.header-actions{display:flex;gap:8px}
+.header-btn{width:38px;height:38px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center}
+.header-btn svg{width:18px;height:18px;stroke:var(--text2);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.header-btn.active{background:var(--orange)}
+.header-btn.active svg{stroke:#fff}
+
+/* SEARCH */
+.search-wrap{padding:10px 16px;flex-shrink:0}
+.search-wrap input{width:100%;padding:10px 14px 10px 38px;border-radius:var(--radius-sm);border:1px solid var(--bg3);background:var(--bg2);color:var(--text);font-size:15px;outline:none;transition:border-color .2s}
+.search-wrap input:focus{border-color:var(--orange)}
+.search-wrap{position:relative}
+.search-wrap svg{position:absolute;left:28px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--text3);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+
+/* STATS BAR */
+.stats-bar{display:flex;gap:6px;padding:0 16px 10px;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.stats-bar::-webkit-scrollbar{display:none}
+.stat-chip{flex-shrink:0;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;background:var(--bg3);color:var(--text2);white-space:nowrap}
+.stat-chip span{color:var(--text);margin-left:4px}
+
+/* TABS */
+.tabs{display:flex;gap:4px;padding:0 16px 10px;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:7px 14px;border-radius:20px;font-size:13px;font-weight:600;background:var(--bg3);color:var(--text2);transition:background .15s,color .15s}
+.tab.active{background:var(--orange);color:#fff}
+.tab .count{margin-left:4px;opacity:.7}
+
+/* PROSPECT LIST */
+.prospect-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px 100px}
+.prospect-list::-webkit-scrollbar{display:none}
+
+/* PROSPECT CARD */
+.card{background:var(--bg2);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;border:1px solid var(--bg3);transition:border-color .2s}
+.card.expanded{border-color:var(--orange)}
+.card-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer}
+.card-name{font-weight:600;font-size:15px}
+.card-sub{font-size:12px;color:var(--text2);margin-top:2px}
+.card-status{font-size:11px;font-weight:600;padding:4px 10px;border-radius:12px;text-transform:uppercase;letter-spacing:.5px}
+.status-new{background:rgba(90,154,106,.15);color:#5a9a6a}
+.status-contacted{background:rgba(201,148,58,.15);color:var(--amber)}
+.status-interested{background:rgba(224,122,58,.15);color:var(--orange)}
+.status-booked{background:rgba(224,122,58,.25);color:var(--orange)}
+.status-pass{background:rgba(168,162,152,.1);color:var(--text3)}
+
+/* CARD BODY */
+.card-body{display:none;padding:0 16px 14px;border-top:1px solid var(--bg3)}
+.card.expanded .card-body{display:block}
+.card-info{padding-top:12px;display:flex;flex-direction:column;gap:8px}
+.card-info-row{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text2)}
+.card-info-row a{color:var(--orange);text-decoration:none}
+.card-info-row svg{width:15px;height:15px;stroke:var(--text3);fill:none;stroke-width:2;flex-shrink:0;stroke-linecap:round;stroke-linejoin:round}
+.card-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.action-btn{padding:8px 14px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;background:var(--bg3);color:var(--text);transition:background .12s}
+.action-btn:active{background:var(--bg4)}
+.action-btn.call{background:rgba(90,154,106,.18);color:#5a9a6a}
+.action-btn.email{background:rgba(224,122,58,.15);color:var(--orange)}
+
+/* STATUS SELECT */
+.status-select-wrap{margin-top:14px}
+.status-select-wrap label{font-size:12px;color:var(--text3);display:block;margin-bottom:6px}
+.status-select-wrap select{width:100%;padding:10px;border-radius:var(--radius-sm);background:var(--bg3);color:var(--text);border:1px solid var(--bg4);font-size:14px;outline:none;-webkit-appearance:none}
+
+/* NOTES */
+.notes-wrap{margin-top:14px}
+.notes-wrap label{font-size:12px;color:var(--text3);display:block;margin-bottom:6px}
+.notes-wrap textarea{width:100%;padding:10px;border-radius:var(--radius-sm);background:var(--bg3);color:var(--text);border:1px solid var(--bg4);font-size:14px;outline:none;resize:vertical;min-height:70px}
+.notes-save{margin-top:8px;padding:8px 20px;border-radius:var(--radius-sm);background:var(--orange);color:#fff;font-weight:600;font-size:13px}
+
+/* TOUCHPOINTS */
+.touchpoints{margin-top:14px}
+.touchpoints-title{font-size:12px;color:var(--text3);margin-bottom:8px}
+.tp-item{font-size:13px;color:var(--text2);padding:6px 0;border-bottom:1px solid var(--bg3);display:flex;justify-content:space-between}
+.tp-item:last-child{border:none}
+.tp-type{font-weight:600;color:var(--sand)}
+.tp-date{font-size:11px;color:var(--text3)}
+
+/* ACTIVITY FEED */
+#activity-view{display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 100px}
+#activity-view::-webkit-scrollbar{display:none}
+#activity-view.visible{display:block}
+.activity-item{padding:12px 0;border-bottom:1px solid var(--bg3);font-size:14px;color:var(--text2)}
+.activity-item .time{font-size:11px;color:var(--text3);margin-top:4px}
+
+/* FAB */
+.fab{position:fixed;bottom:max(24px,env(safe-area-inset-bottom,24px));right:20px;width:56px;height:56px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(224,122,58,.4);z-index:100;transition:transform .15s}
+.fab:active{transform:scale(.9)}
+.fab svg{width:26px;height:26px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+
+/* BOTTOM SHEET */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;opacity:0;pointer-events:none;transition:opacity .3s}
+.overlay.visible{opacity:1;pointer-events:auto}
+.bottom-sheet{position:fixed;left:0;right:0;bottom:0;z-index:201;background:var(--bg2);border-radius:20px 20px 0 0;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,.72,.24,1);max-height:85vh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
+.bottom-sheet.visible{transform:translateY(0)}
+.sheet-handle{width:40px;height:4px;border-radius:2px;background:var(--bg4);margin:10px auto}
+.sheet-header{padding:4px 20px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bg3)}
+.sheet-header h3{font-family:'Playfair Display',serif;font-size:18px}
+.sheet-close{width:32px;height:32px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text2)}
+.sheet-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 20px 20px;flex:1}
+
+/* ADD FORM */
+.form-group{margin-bottom:14px}
+.form-group label{font-size:12px;color:var(--text3);display:block;margin-bottom:6px}
+.form-group input,.form-group select{width:100%;padding:11px 14px;border-radius:var(--radius-sm);background:var(--bg3);color:var(--text);border:1px solid var(--bg4);font-size:15px;outline:none}
+.form-group input:focus{border-color:var(--orange)}
+.form-submit{width:100%;padding:14px;border-radius:var(--radius);background:var(--orange);color:#fff;font-size:16px;font-weight:700;margin-top:8px}
+
+/* EMAIL SHEET */
+.email-tabs{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.email-tabs::-webkit-scrollbar{display:none}
+.email-tab{flex-shrink:0;padding:7px 14px;border-radius:20px;font-size:13px;font-weight:600;background:var(--bg3);color:var(--text2);transition:all .15s}
+.email-tab.active{background:var(--orange);color:#fff}
+.email-preview{background:var(--bg);border-radius:var(--radius-sm);padding:16px;font-size:14px;line-height:1.6;color:var(--text2);white-space:pre-wrap;max-height:40vh;overflow-y:auto;margin-bottom:16px}
+.email-actions{display:flex;gap:10px}
+.email-actions button{flex:1;padding:13px;border-radius:var(--radius-sm);font-size:14px;font-weight:600}
+.email-actions .copy-btn{background:var(--bg3);color:var(--text)}
+.email-actions .mail-btn{background:var(--orange);color:#fff}
+
+/* TOAST */
+.toast{position:fixed;top:max(20px,env(safe-area-inset-top,20px));left:50%;transform:translateX(-50%) translateY(-100px);z-index:9999;background:var(--bg3);color:var(--text);padding:12px 24px;border-radius:var(--radius);font-size:14px;font-weight:500;box-shadow:0 8px 30px rgba(0,0,0,.4);transition:transform .35s cubic-bezier(.32,.72,.24,1);white-space:nowrap;border:1px solid var(--bg4)}
+.toast.visible{transform:translateX(-50%) translateY(0)}
+.toast.success{border-color:var(--green)}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:60px 20px;color:var(--text3);font-size:15px}
+
+/* Pipeline view hide when activity */
+#pipeline-view{display:flex;flex-direction:column;flex:1;overflow:hidden}
+#pipeline-view.hidden{display:none}
+</style>
+</head>
+<body>
+
+<!-- PIN SCREEN -->
+<div id="pin-screen">
+  <h1 class="brand">BookedUp</h1>
+  <p class="subtitle">Enter your PIN</p>
+  <div class="pin-dots" id="pin-dots">
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+  </div>
+  <div class="numpad" id="numpad">
+    <button onclick="pinPress('1')">1</button>
+    <button onclick="pinPress('2')">2</button>
+    <button onclick="pinPress('3')">3</button>
+    <button onclick="pinPress('4')">4</button>
+    <button onclick="pinPress('5')">5</button>
+    <button onclick="pinPress('6')">6</button>
+    <button onclick="pinPress('7')">7</button>
+    <button onclick="pinPress('8')">8</button>
+    <button onclick="pinPress('9')">9</button>
+    <button disabled></button>
+    <button onclick="pinPress('0')">0</button>
+    <button class="del" onclick="pinDel()">DEL</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <!-- Header -->
+  <div class="header">
+    <div class="brand">BookedUp</div>
+    <div class="header-actions">
+      <button class="header-btn" id="activity-toggle" onclick="toggleActivity()" title="Activity">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </button>
+      <button class="header-btn" onclick="loadData()" title="Refresh">
+        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-wrap">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="search-input" placeholder="Search prospects..." oninput="renderProspects()">
+  </div>
+
+  <!-- Pipeline View -->
+  <div id="pipeline-view">
+    <!-- Stats -->
+    <div class="stats-bar" id="stats-bar"></div>
+    <!-- Tabs -->
+    <div class="tabs" id="tabs"></div>
+    <!-- List -->
+    <div class="prospect-list" id="prospect-list"></div>
+  </div>
+
+  <!-- Activity View -->
+  <div id="activity-view"></div>
+
+  <!-- FAB -->
+  <button class="fab" onclick="openAddSheet()">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+</div>
+
+<!-- Overlay -->
+<div class="overlay" id="overlay" onclick="closeAllSheets()"></div>
+
+<!-- Add Prospect Sheet -->
+<div class="bottom-sheet" id="add-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header"><h3>Add Prospect</h3><button class="sheet-close" onclick="closeAllSheets()">X</button></div>
+  <div class="sheet-body">
+    <div class="form-group"><label>Name</label><input id="f-name" placeholder="Business name"></div>
+    <div class="form-group"><label>Type</label><input id="f-type" placeholder="e.g. Barbershop, Restaurant"></div>
+    <div class="form-group"><label>City</label><input id="f-city" placeholder="City"></div>
+    <div class="form-group"><label>Phone</label><input id="f-phone" type="tel" placeholder="Phone number"></div>
+    <div class="form-group"><label>Email</label><input id="f-email" type="email" placeholder="Email"></div>
+    <div class="form-group"><label>Website</label><input id="f-website" placeholder="Website"></div>
+    <div class="form-group"><label>Notes</label><input id="f-notes" placeholder="Notes"></div>
+    <button class="form-submit" onclick="addProspect()">Add Prospect</button>
+  </div>
+</div>
+
+<!-- Email Template Sheet -->
+<div class="bottom-sheet" id="email-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header"><h3>Email Templates</h3><button class="sheet-close" onclick="closeAllSheets()">X</button></div>
+  <div class="sheet-body">
+    <div class="email-tabs" id="email-tabs"></div>
+    <div class="email-preview" id="email-preview"></div>
+    <div class="email-actions">
+      <button class="copy-btn" onclick="copyEmail()">Copy to Clipboard</button>
+      <button class="mail-btn" onclick="openInMail()">Open in Mail</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://dtwixosmblraxqdvbzah.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_FYZKjKLmCEIj774Lyfjttg_xrvAyp0L';
+const PIN = '1127';
+
+let pinValue = '';
+let prospects = [];
+let activeTab = 'all';
+let expandedId = null;
+let showActivity = false;
+let emailProspect = null;
+let emailTabIndex = 0;
+
+// --- Supabase helpers ---
+async function sb(path, opts = {}) {
+  const url = SUPABASE_URL + '/rest/v1/' + path;
+  const headers = {
+    'apikey': SUPABASE_KEY,
+    'Authorization': 'Bearer ' + SUPABASE_KEY,
+    'Content-Type': 'application/json',
+    'Prefer': opts.prefer || ''
+  };
+  if (opts.prefer) headers['Prefer'] = opts.prefer;
+  const res = await fetch(url, { method: opts.method || 'GET', headers, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  if (opts.method === 'PATCH' || opts.method === 'POST') {
+    if (opts.prefer && opts.prefer.includes('return=representation')) {
+      return res.json();
+    }
+    return res.ok;
+  }
+  return res.json();
+}
+
+// --- PIN ---
+function pinPress(n) {
+  if (pinValue.length >= 4) return;
+  pinValue += n;
+  updateDots();
+  if (pinValue.length === 4) {
+    if (pinValue === PIN) {
+      document.getElementById('pin-screen').classList.add('hidden');
+      document.getElementById('app').classList.add('visible');
+      loadData();
+    } else {
+      const dots = document.getElementById('pin-dots');
+      dots.classList.add('shake');
+      setTimeout(() => { dots.classList.remove('shake'); pinValue = ''; updateDots(); }, 500);
+    }
+  }
+}
+function pinDel() {
+  pinValue = pinValue.slice(0, -1);
+  updateDots();
+}
+function updateDots() {
+  document.querySelectorAll('#pin-dots .dot').forEach((d, i) => {
+    d.classList.toggle('filled', i < pinValue.length);
+  });
+}
+
+// --- Data ---
+async function loadData() {
+  try {
+    prospects = await sb('Prospects?select=*&order=id.desc');
+    renderStats();
+    renderTabs();
+    renderProspects();
+    if (showActivity) loadActivity();
+    toast('Data refreshed', true);
+  } catch (e) {
+    toast('Failed to load data');
+  }
+}
+
+async function loadActivity() {
+  try {
+    const logs = await sb('activity_log?select=*&order=created_at.desc&limit=50');
+    const el = document.getElementById('activity-view');
+    if (!logs.length) { el.innerHTML = '<div class="empty-state">No activity yet</div>'; return; }
+    el.innerHTML = logs.map(l => {
+      const d = new Date(l.created_at);
+      const time = d.toLocaleDateString('en-US', { month:'short', day:'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
+      return '<div class="activity-item">' + esc(l.text) + '<div class="time">' + time + '</div></div>';
+    }).join('');
+  } catch(e) {}
+}
+
+// --- Rendering ---
+function renderStats() {
+  const total = prospects.length;
+  const booked = prospects.filter(p => p.status === 'booked').length;
+  const hot = prospects.filter(p => p.status === 'interested').length;
+  const contacted = prospects.filter(p => p.status === 'contacted').length;
+  const newc = prospects.filter(p => p.status === 'new').length;
+  document.getElementById('stats-bar').innerHTML =
+    `<div class="stat-chip">Total<span>${total}</span></div>` +
+    `<div class="stat-chip">Booked<span>${booked}</span></div>` +
+    `<div class="stat-chip">Hot<span>${hot}</span></div>` +
+    `<div class="stat-chip">Contacted<span>${contacted}</span></div>` +
+    `<div class="stat-chip">New<span>${newc}</span></div>`;
+}
+
+const STATUSES = ['all','new','contacted','interested','booked','pass'];
+function renderTabs() {
+  const counts = {};
+  STATUSES.forEach(s => { counts[s] = s === 'all' ? prospects.length : prospects.filter(p => p.status === s).length; });
+  document.getElementById('tabs').innerHTML = STATUSES.map(s =>
+    `<button class="tab${activeTab===s?' active':''}" onclick="setTab('${s}')">${s.charAt(0).toUpperCase()+s.slice(1)}<span class="count">${counts[s]}</span></button>`
+  ).join('');
+}
+
+function setTab(t) { activeTab = t; renderTabs(); renderProspects(); }
+
+function renderProspects() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  let list = prospects;
+  if (activeTab !== 'all') list = list.filter(p => p.status === activeTab);
+  if (q) list = list.filter(p => (p.name||'').toLowerCase().includes(q) || (p.type||'').toLowerCase().includes(q) || (p.city||'').toLowerCase().includes(q));
+  if (!list.length) {
+    document.getElementById('prospect-list').innerHTML = '<div class="empty-state">No prospects found</div>';
+    return;
+  }
+  document.getElementById('prospect-list').innerHTML = list.map(p => {
+    const expanded = expandedId === p.id;
+    const statusCls = 'status-' + (p.status||'new');
+    const tps = Array.isArray(p.touchpoints) ? p.touchpoints : [];
+    return `<div class="card${expanded?' expanded':''}" id="card-${p.id}">
+      <div class="card-header" onclick="toggleCard(${p.id})">
+        <div><div class="card-name">${esc(p.name||'')}</div><div class="card-sub">${esc(p.type||'')}${p.city?' / '+esc(p.city):''}</div></div>
+        <div class="card-status ${statusCls}">${esc(p.status||'new')}</div>
+      </div>
+      <div class="card-body">
+        <div class="card-info">
+          ${p.phone?`<div class="card-info-row"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg><a href="tel:${esc(p.phone)}">${esc(p.phone)}</a></div>`:''}
+          ${p.email?`<div class="card-info-row"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><a href="mailto:${esc(p.email)}">${esc(p.email)}</a></div>`:''}
+          ${p.website?`<div class="card-info-row"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><a href="${esc(p.website)}" target="_blank">${esc(p.website)}</a></div>`:''}
+          ${p.city?`<div class="card-info-row"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(p.city)}</div>`:''}
+        </div>
+        <div class="card-actions">
+          <button class="action-btn call" onclick="logAction(${p.id},'Call')">Call</button>
+          <button class="action-btn email" onclick="openEmailSheet(${p.id})">Email</button>
+          <button class="action-btn" onclick="logAction(${p.id},'Drop-in')">Drop-in</button>
+          <button class="action-btn" onclick="logAction(${p.id},'Voicemail')">Voicemail</button>
+        </div>
+        <div class="status-select-wrap">
+          <label>Status</label>
+          <select onchange="updateStatus(${p.id},this.value)">
+            ${['new','contacted','interested','booked','pass'].map(s=>`<option value="${s}"${p.status===s?' selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="notes-wrap">
+          <label>Notes</label>
+          <textarea id="notes-${p.id}" placeholder="Add notes...">${esc(p.notes||'')}</textarea>
+          <button class="notes-save" onclick="saveNotes(${p.id})">Save Notes</button>
+        </div>
+        ${tps.length?`<div class="touchpoints"><div class="touchpoints-title">Touchpoints</div>${tps.slice().reverse().map(t=>`<div class="tp-item"><span class="tp-type">${esc(t.type||'')}</span><span class="tp-date">${formatDate(t.date)}</span></div>`).join('')}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCard(id) { expandedId = expandedId === id ? null : id; renderProspects(); }
+
+// --- Actions ---
+async function logAction(id, type) {
+  const p = prospects.find(x => x.id === id);
+  if (!p) return;
+  const tp = { type, date: new Date().toISOString() };
+  const tps = Array.isArray(p.touchpoints) ? [...p.touchpoints, tp] : [tp];
+  const updates = { touchpoints: tps };
+  if (p.status === 'new' && tps.length >= 1) updates.status = 'contacted';
+  await sb('Prospects?id=eq.' + id, { method: 'PATCH', body: updates, prefer: 'return=minimal' });
+  await sb('activity_log', { method: 'POST', body: { text: type + ' - ' + (p.name||'Unknown') }, prefer: 'return=minimal' });
+  p.touchpoints = tps;
+  if (updates.status) p.status = updates.status;
+  renderStats(); renderTabs(); renderProspects();
+  toast(type + ' logged for ' + (p.name||''), true);
+}
+
+async function updateStatus(id, status) {
+  await sb('Prospects?id=eq.' + id, { method: 'PATCH', body: { status }, prefer: 'return=minimal' });
+  const p = prospects.find(x => x.id === id);
+  if (p) p.status = status;
+  renderStats(); renderTabs(); renderProspects();
+  toast('Status updated', true);
+}
+
+async function saveNotes(id) {
+  const notes = document.getElementById('notes-' + id).value;
+  await sb('Prospects?id=eq.' + id, { method: 'PATCH', body: { notes }, prefer: 'return=minimal' });
+  const p = prospects.find(x => x.id === id);
+  if (p) p.notes = notes;
+  toast('Notes saved', true);
+}
+
+// --- Add Prospect ---
+function openAddSheet() {
+  document.getElementById('overlay').classList.add('visible');
+  document.getElementById('add-sheet').classList.add('visible');
+}
+
+async function addProspect() {
+  const data = {
+    name: document.getElementById('f-name').value.trim(),
+    type: document.getElementById('f-type').value.trim(),
+    city: document.getElementById('f-city').value.trim(),
+    phone: document.getElementById('f-phone').value.trim(),
+    email: document.getElementById('f-email').value.trim(),
+    website: document.getElementById('f-website').value.trim(),
+    notes: document.getElementById('f-notes').value.trim(),
+    status: 'new',
+    touchpoints: []
+  };
+  if (!data.name) { toast('Name is required'); return; }
+  await sb('Prospects', { method: 'POST', body: data, prefer: 'return=minimal' });
+  await sb('activity_log', { method: 'POST', body: { text: 'Added prospect: ' + data.name }, prefer: 'return=minimal' });
+  closeAllSheets();
+  ['f-name','f-type','f-city','f-phone','f-email','f-website','f-notes'].forEach(id => document.getElementById(id).value = '');
+  toast('Prospect added', true);
+  loadData();
+}
+
+// --- Email Templates ---
+const EMAIL_TEMPLATES = [
+  { name: 'Cold Intro', fn: (p) =>
+`Subject: Quick question for ${p.name}
+
+Hey there,
+
+I came across ${p.name} and honestly, your ${p.type ? p.type.toLowerCase() : 'business'} caught my eye. Really solid stuff.
+
+I work with local ${p.type ? p.type.toLowerCase() + 's' : 'businesses'} here in the Valley to help them get fully booked through better online presence and marketing. Not some cookie-cutter thing, more like a hands-on partnership.
+
+Would you be open to a quick 15-minute chat this week? No pressure, just want to see if there is a fit.
+
+Talk soon,
+Jacob Harter
+BookedUp
+jacob@getbookedup.io`
+  },
+  { name: 'Follow-Up', fn: (p) =>
+`Subject: Following up, ${p.name}
+
+Hey,
+
+Just circling back on my last message. I know things get busy, totally get it.
+
+I still think there is a real opportunity for ${p.name} to bring in more customers consistently. I have been working with a few other ${p.type ? p.type.toLowerCase() + 's' : 'businesses'} in the area and the results have been pretty solid.
+
+If the timing is better now, I would love to connect for a few minutes. If not, no worries at all.
+
+Hope things are going well over there.
+
+Jacob Harter
+BookedUp
+jacob@getbookedup.io`
+  },
+  { name: 'Google Reviews', fn: (p) =>
+`Subject: Getting ${p.name} more 5-star reviews
+
+Hey,
+
+One thing I have noticed with a lot of ${p.type ? p.type.toLowerCase() + 's' : 'businesses'} around here is that the ones crushing it almost always have a strong Google review game. People check reviews before they walk in the door, every single time.
+
+I have got a simple system that helps ${p.type ? p.type.toLowerCase() + 's' : 'businesses'} like ${p.name} get more real, organic reviews from happy customers without it feeling weird or pushy.
+
+Would you be down to hear how it works? Takes about 15 minutes.
+
+Jacob Harter
+BookedUp
+jacob@getbookedup.io`
+  },
+  { name: 'After Drop-In', fn: (p) =>
+`Subject: Good meeting you today
+
+Hey,
+
+Really glad I got to stop by ${p.name} today. Awesome spot and I can tell you are doing things right.
+
+Like I mentioned, I think there are a few straightforward ways to get more people through the door consistently. Nothing crazy, just smart stuff that works for local ${p.type ? p.type.toLowerCase() + 's' : 'businesses'}.
+
+Here is my calendar link if you want to grab 15 minutes this week: cal.com/gotbookedup/15min
+
+Looking forward to it.
+
+Jacob Harter
+BookedUp
+jacob@getbookedup.io`
+  }
+];
+
+function openEmailSheet(id) {
+  emailProspect = prospects.find(x => x.id === id);
+  if (!emailProspect) return;
+  emailTabIndex = 0;
+  renderEmailSheet();
+  document.getElementById('overlay').classList.add('visible');
+  document.getElementById('email-sheet').classList.add('visible');
+}
+
+function renderEmailSheet() {
+  document.getElementById('email-tabs').innerHTML = EMAIL_TEMPLATES.map((t, i) =>
+    `<button class="email-tab${emailTabIndex===i?' active':''}" onclick="setEmailTab(${i})">${t.name}</button>`
+  ).join('');
+  document.getElementById('email-preview').textContent = EMAIL_TEMPLATES[emailTabIndex].fn(emailProspect);
+}
+
+function setEmailTab(i) { emailTabIndex = i; renderEmailSheet(); }
+
+function copyEmail() {
+  const text = EMAIL_TEMPLATES[emailTabIndex].fn(emailProspect);
+  navigator.clipboard.writeText(text).then(() => toast('Copied to clipboard', true)).catch(() => toast('Copy failed'));
+}
+
+function openInMail() {
+  const text = EMAIL_TEMPLATES[emailTabIndex].fn(emailProspect);
+  const lines = text.split('\n');
+  const subjectLine = lines[0].replace('Subject: ', '');
+  const body = lines.slice(2).join('\n');
+  const email = emailProspect.email || '';
+  window.location.href = 'mailto:' + encodeURIComponent(email) + '?subject=' + encodeURIComponent(subjectLine) + '&body=' + encodeURIComponent(body);
+}
+
+// --- Activity Toggle ---
+function toggleActivity() {
+  showActivity = !showActivity;
+  document.getElementById('activity-toggle').classList.toggle('active', showActivity);
+  document.getElementById('pipeline-view').classList.toggle('hidden', showActivity);
+  document.getElementById('activity-view').classList.toggle('visible', showActivity);
+  if (showActivity) loadActivity();
+}
+
+// --- Sheets ---
+function closeAllSheets() {
+  document.getElementById('overlay').classList.remove('visible');
+  document.querySelectorAll('.bottom-sheet').forEach(s => s.classList.remove('visible'));
+}
+
+// --- Toast ---
+function toast(msg, success) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast visible' + (success ? ' success' : '');
+  setTimeout(() => el.classList.remove('visible'), 2200);
+}
+
+// --- Helpers ---
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function formatDate(d) { if (!d) return ''; const dt = new Date(d); return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' ' + dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); }
+</script>
+</body>
+</html>
