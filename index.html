@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>BookedUp CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#1a1a1a;--card:#222;--border:#333;--border-light:#444;
+  --orange:#e07a3a;--orange-dim:rgba(224,122,58,.12);--orange-light:#e89355;
+  --amber:#c9943a;--amber-dim:rgba(201,148,58,.12);
+  --sand:#b8a882;--sand-dim:rgba(184,168,130,.15);
+  --cream:#f0ebe0;--cream-dim:#c4bcad;--muted:#8a847b;
+  --green:#4a9;--green-dim:rgba(68,170,153,.12);
+  --red:#c44;--red-dim:rgba(204,68,68,.12);
+  --blue:#5a9ec4;--blue-dim:rgba(90,158,196,.12);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--cream);min-height:100vh}
+
+/* Login */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:40px 36px;width:100%;max-width:380px;text-align:center}
+.login-box h1{font-family:'Playfair Display',serif;font-size:1.6em;font-weight:800;margin-bottom:6px}
+.login-box h1 b{color:var(--orange)}
+.login-sub{color:var(--muted);font-size:.85em;margin-bottom:24px}
+.login-input{width:100%;padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:1.2em;text-align:center;letter-spacing:6px;font-weight:700;outline:none;margin-bottom:14px;-webkit-appearance:none}
+.login-input:focus{border-color:var(--orange)}
+.login-btn{width:100%;padding:14px;background:var(--orange);color:var(--cream);border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:1em;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer}
+.login-err{color:var(--red);font-size:.85em;margin-bottom:12px;display:none}
+
+/* App shell */
+.app{display:none}
+.header{background:linear-gradient(135deg,var(--bg),var(--card));border-bottom:3px solid var(--orange);padding:18px 24px;display:flex;justify-content:space-between;align-items:center}
+.header h1{font-family:'Playfair Display',serif;font-size:1.5em;font-weight:800}
+.header h1 b{color:var(--orange)}
+.header-right{display:flex;align-items:center;gap:12px}
+.header-right .count{font-size:.8em;color:var(--muted)}
+.logout-btn{color:var(--muted);text-decoration:none;font-size:.72em;font-weight:600;text-transform:uppercase;letter-spacing:1px;padding:6px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:none}
+
+.page{padding:20px 24px;max-width:900px;margin:0 auto}
+
+/* Tabs */
+.tabs{display:flex;gap:6px;margin-bottom:20px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tab{padding:8px 16px;border-radius:8px;font-size:.8em;font-weight:700;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;white-space:nowrap;background:var(--card);border:1px solid var(--border);color:var(--muted);transition:all .15s}
+.tab:hover{border-color:var(--border-light);color:var(--cream-dim)}
+.tab.active{background:var(--orange-dim);border-color:var(--orange);color:var(--orange)}
+.tab .badge{font-size:.75em;margin-left:4px;opacity:.7}
+
+/* Prospect cards */
+.prospect-list{display:flex;flex-direction:column;gap:10px;margin-bottom:28px}
+.prospect-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .15s}
+.prospect-card:hover{border-color:var(--border-light)}
+.prospect-head{padding:14px 18px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.prospect-head-left{flex:1}
+.p-name{font-weight:700;font-size:.95em;color:var(--cream)}
+.p-meta{font-size:.78em;color:var(--muted);margin-top:2px}
+.p-status{padding:3px 10px;border-radius:6px;font-size:.68em;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.p-status-new{background:var(--orange-dim);color:var(--orange)}
+.p-status-contacted{background:var(--blue-dim);color:var(--blue)}
+.p-status-interested{background:var(--amber-dim);color:var(--amber)}
+.p-status-booked{background:var(--green-dim);color:var(--green)}
+.p-status-pass{background:var(--red-dim);color:var(--red)}
+.chevron{color:var(--muted);font-size:.7em;margin-left:8px;transition:transform .2s}
+.prospect-card.open .chevron{transform:rotate(90deg)}
+
+/* Expanded detail */
+.prospect-body{display:none;padding:0 18px 16px;border-top:1px solid var(--border)}
+.prospect-card.open .prospect-body{display:block}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;margin:14px 0}
+.d-label{font-size:.65em;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:600}
+.d-value{font-size:.85em;color:var(--cream-dim);margin-bottom:6px}
+
+/* Status buttons */
+.status-btns{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+.status-btn{padding:7px 14px;border-radius:6px;font-size:.72em;font-weight:700;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:opacity .15s}
+.status-btn:hover{opacity:.85}
+.status-btn:disabled{opacity:.3;cursor:default}
+.sb-contacted{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(90,158,196,.25)}
+.sb-interested{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(201,148,58,.25)}
+.sb-booked{background:var(--green-dim);color:var(--green);border:1px solid rgba(68,170,153,.25)}
+.sb-pass{background:var(--red-dim);color:var(--red);border:1px solid rgba(204,68,68,.25)}
+
+/* Log touchpoint */
+.log-section{margin:12px 0}
+.log-section h4{font-size:.72em;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:600;margin-bottom:8px}
+.log-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.log-btn{padding:8px 14px;border-radius:6px;font-size:.78em;font-weight:600;cursor:pointer;background:var(--bg);border:1px solid var(--border);color:var(--cream-dim);font-family:'DM Sans',sans-serif}
+.log-btn:hover{border-color:var(--orange);color:var(--orange)}
+.log-btn.selected{background:var(--orange-dim);border-color:var(--orange);color:var(--orange)}
+.log-note{width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:.85em;outline:none;resize:vertical;min-height:40px;margin-bottom:8px}
+.log-note:focus{border-color:var(--orange)}
+.log-submit{padding:9px 18px;background:var(--orange);color:var(--cream);border:none;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.8em;font-weight:700;text-transform:uppercase;letter-spacing:.5px;cursor:pointer}
+.log-submit:disabled{opacity:.4}
+
+/* Email templates */
+.email-section{margin:12px 0}
+.email-section h4{font-size:.72em;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:600;margin-bottom:8px}
+.email-tabs{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.email-tab{padding:6px 12px;border-radius:6px;font-size:.72em;font-weight:600;cursor:pointer;background:var(--bg);border:1px solid var(--border);color:var(--cream-dim);font-family:'DM Sans',sans-serif}
+.email-tab:hover{border-color:var(--sand);color:var(--sand)}
+.email-tab.active{background:var(--sand-dim);border-color:var(--sand);color:var(--sand)}
+.email-body{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:.82em;color:var(--cream-dim);line-height:1.6;white-space:pre-wrap;display:none;max-height:300px;overflow-y:auto}
+.email-body.visible{display:block}
+.copy-btn{margin-top:6px;padding:6px 14px;background:var(--card);border:1px solid var(--border);border-radius:6px;font-size:.72em;font-weight:600;color:var(--cream-dim);cursor:pointer;font-family:'DM Sans',sans-serif;display:none}
+.email-body.visible+.copy-btn{display:inline-block}
+
+/* Activity feed */
+.feed-section{margin-top:28px}
+.feed-header{font-family:'Playfair Display',serif;font-size:1.05em;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.feed-list{display:flex;flex-direction:column;gap:6px}
+.feed-item{display:flex;align-items:baseline;gap:12px;padding:8px 12px;background:var(--card);border-radius:6px;font-size:.82em}
+.feed-time{color:var(--muted);font-size:.85em;flex-shrink:0;min-width:70px}
+.feed-type{color:var(--orange);font-weight:600;flex-shrink:0;min-width:80px}
+.feed-text{color:var(--cream-dim);flex:1}
+.feed-empty{color:var(--muted);font-style:italic;text-align:center;padding:20px}
+
+.powered{text-align:center;padding:28px;font-size:.65em;color:#333;text-transform:uppercase;letter-spacing:1px}
+.powered b{color:var(--orange)}
+
+@media(max-width:600px){
+  .header{flex-direction:column;gap:8px;text-align:center}
+  .detail-grid{grid-template-columns:1fr}
+  .tabs{gap:4px}.tab{padding:6px 12px;font-size:.72em}
+}
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div class="login-wrap" id="login-screen">
+<div class="login-box">
+  <h1>Booked<b>Up</b></h1>
+  <div class="login-sub">CRM -- Enter PIN</div>
+  <div class="login-err" id="login-err">Wrong PIN</div>
+  <input type="password" class="login-input" id="pin-input" placeholder="----" autofocus autocomplete="off" inputmode="numeric" maxlength="4">
+  <button class="login-btn" onclick="tryLogin()">Sign In</button>
+</div>
+</div>
+
+<!-- App -->
+<div class="app" id="app">
+<div class="header">
+  <h1>Booked<b>Up</b> CRM</h1>
+  <div class="header-right">
+    <span class="count" id="header-count"></span>
+    <button class="logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+</div>
+<div class="page">
+  <div class="tabs" id="tabs"></div>
+  <div class="prospect-list" id="prospect-list"></div>
+  <div class="feed-section">
+    <div class="feed-header"><span>Activity Feed</span><button class="logout-btn" onclick="loadFeed()" style="font-size:1em">Refresh</button></div>
+    <div class="feed-list" id="feed-list"><div class="feed-empty">Loading...</div></div>
+  </div>
+  <div class="powered">Powered by <b>BookedUp</b></div>
+</div>
+</div>
+
+<script>
+const SB='https://dtwixosmblraxqdvbzah.supabase.co/rest/v1';
+const KEY='sb_publishable_FYZKjKLmCEIj774Lyfjttg_xrvAyp0L';
+const H={'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'};
+const PIN='1127';
+let prospects=[];
+let currentTab='all';
+
+const TEMPLATES={
+'Cold Intro':`Subject: Quick question about {{name}}
+
+Hi there,
+
+I came across {{name}} and wanted to reach out. We help {{type}} businesses in {{city}} get more booked jobs with less admin headaches.
+
+BookedUp automates your entire intake-to-completion flow -- online booking, automated work orders, customer updates, and a live dashboard your team can check from their phone.
+
+Would you be open to a quick 10-minute call this week? No pressure, just a look at how it works.
+
+Best,
+Jacob
+BookedUp`,
+
+'Follow-Up':`Subject: Following up -- {{name}}
+
+Hi,
+
+I reached out last week about how BookedUp helps {{type}} businesses streamline their booking and job management. Wanted to bump this in case it got buried.
+
+One of our {{type}} clients went from juggling phone calls to having everything automated -- new jobs, scheduling, customer updates, all handled. They said it saved them 10+ hours a week.
+
+Happy to show you in a quick call. What day works?
+
+Best,
+Jacob
+BookedUp`,
+
+'Google Reviews':`Subject: Quick idea for {{name}}'s online presence
+
+Hi,
+
+I was looking at {{type}} businesses in {{city}} and noticed {{name}} -- you clearly do great work. One thing that can really move the needle is making it dead simple for happy customers to leave a Google review right after a job wraps up.
+
+BookedUp does this automatically. When a job is marked complete, your customer gets a text with a direct link to leave a review. No asking, no awkward follow-up.
+
+Worth a quick look? 10 minutes, I can show you exactly how it works.
+
+Best,
+Jacob
+BookedUp`,
+
+'After Drop-In':`Subject: Great meeting you -- {{name}}
+
+Hi,
+
+Thanks for taking a minute to chat when I stopped by {{name}} today. As I mentioned, BookedUp is a booking and job management tool built specifically for {{type}} businesses in the East Valley.
+
+Here is what it does in a nutshell:
+- Customers book online, work orders are created automatically
+- Your team sees a live job board from their phone
+- Status updates go out to customers automatically
+- Completed jobs trigger Google review requests
+
+I would love to give you a proper demo. Would 10 minutes this week work?
+
+Best,
+Jacob
+BookedUp`
+};
+
+// Login
+function tryLogin(){
+  const v=document.getElementById('pin-input').value;
+  if(v===PIN){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+    sessionStorage.setItem('crm_auth','1');
+    loadAll();
+  } else {
+    const e=document.getElementById('login-err');
+    e.style.display='block';
+    document.getElementById('pin-input').value='';
+    setTimeout(()=>e.style.display='none',2000);
+  }
+}
+document.getElementById('pin-input').addEventListener('keydown',e=>{if(e.key==='Enter')tryLogin()});
+
+function doLogout(){
+  sessionStorage.removeItem('crm_auth');
+  location.reload();
+}
+
+// Auto-login
+if(sessionStorage.getItem('crm_auth')==='1'){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  loadAll();
+}
+
+function loadAll(){loadProspects();loadFeed()}
+
+// Supabase helpers
+async function sbGet(table,params=''){
+  try{const r=await fetch(SB+'/'+table+params,{headers:H});return r.ok?await r.json():[];}
+  catch(e){console.error('sbGet error:',e);return[];}
+}
+async function sbPatch(table,id,data){
+  try{const r=await fetch(SB+'/'+table+'?id=eq.'+id,{method:'PATCH',headers:{...H,'Prefer':'return=representation'},body:JSON.stringify(data)});return r.ok?await r.json():null;}
+  catch(e){console.error('sbPatch error:',e);return null;}
+}
+async function sbPost(table,data){
+  try{const r=await fetch(SB+'/'+table,{method:'POST',headers:{...H,'Prefer':'return=representation'},body:JSON.stringify(data)});return r.ok?await r.json():null;}
+  catch(e){console.error('sbPost error:',e);return null;}
+}
+
+// Prospects
+async function loadProspects(){
+  try{
+    prospects=await sbGet('Prospects','?select=*&order=id.asc');
+    if(!Array.isArray(prospects))prospects=[];
+    renderTabs();
+    renderProspects();
+    document.getElementById('header-count').textContent=prospects.length+' prospects';
+  }catch(e){console.error('loadProspects error:',e);prospects=[];}
+}
+
+function renderTabs(){
+  const counts={all:prospects.length};
+  ['new','contacted','interested','booked','pass'].forEach(s=>{
+    counts[s]=prospects.filter(p=>p.status===s).length;
+  });
+  const labels={all:'All',new:'New',contacted:'Contacted',interested:'Interested',booked:'Booked',pass:'Pass'};
+  let html='';
+  for(const[k,label]of Object.entries(labels)){
+    html+=`<div class="tab ${currentTab===k?'active':''}" onclick="setTab('${k}')">${label}<span class="badge">${counts[k]||0}</span></div>`;
+  }
+  document.getElementById('tabs').innerHTML=html;
+}
+
+function setTab(t){currentTab=t;renderTabs();renderProspects()}
+
+function renderProspects(){
+  const filtered=currentTab==='all'?prospects:prospects.filter(p=>p.status===currentTab);
+  if(!filtered.length){
+    document.getElementById('prospect-list').innerHTML='<div class="feed-empty">No prospects in this view</div>';
+    return;
+  }
+  document.getElementById('prospect-list').innerHTML=filtered.map(p=>{
+    const tp=parseTouchpoints(p.touchpoints);
+    return `
+    <div class="prospect-card" id="pc-${p.id}">
+      <div class="prospect-head" onclick="toggleCard(${p.id})">
+        <div class="prospect-head-left">
+          <div class="p-name">${esc(p.name)}</div>
+          <div class="p-meta">${esc(p.type||'')}${p.city?' -- '+esc(p.city):''}</div>
+        </div>
+        <span class="p-status p-status-${p.status}">${p.status}</span>
+        <span class="chevron">&#9654;</span>
+      </div>
+      <div class="prospect-body">
+        <div class="detail-grid">
+          <div><div class="d-label">Phone</div><div class="d-value">${esc(p.phone||'--')}</div></div>
+          <div><div class="d-label">Email</div><div class="d-value">${esc(p.email||'--')}</div></div>
+          <div><div class="d-label">Website</div><div class="d-value">${esc(p.website||'--')}</div></div>
+          <div><div class="d-label">Notes</div><div class="d-value">${esc(p.notes||'--')}</div></div>
+        </div>
+        <div class="status-btns">
+          <button class="status-btn sb-contacted" onclick="setStatus(${p.id},'contacted')" ${p.status==='contacted'?'disabled':''}>Contacted</button>
+          <button class="status-btn sb-interested" onclick="setStatus(${p.id},'interested')" ${p.status==='interested'?'disabled':''}>Interested</button>
+          <button class="status-btn sb-booked" onclick="setStatus(${p.id},'booked')" ${p.status==='booked'?'disabled':''}>Booked</button>
+          <button class="status-btn sb-pass" onclick="setStatus(${p.id},'pass')" ${p.status==='pass'?'disabled':''}>Pass</button>
+        </div>
+        <div class="log-section">
+          <h4>Log Touchpoint</h4>
+          <div class="log-btns" id="log-btns-${p.id}">
+            <div class="log-btn" onclick="selectLogType(${p.id},'call',this)">Call</div>
+            <div class="log-btn" onclick="selectLogType(${p.id},'drop-in',this)">Drop-in</div>
+            <div class="log-btn" onclick="selectLogType(${p.id},'voicemail',this)">Voicemail</div>
+            <div class="log-btn" onclick="selectLogType(${p.id},'email',this)">Email</div>
+          </div>
+          <textarea class="log-note" id="log-note-${p.id}" placeholder="Add notes..."></textarea>
+          <button class="log-submit" id="log-sub-${p.id}" onclick="submitLog(${p.id})" disabled>Log Activity</button>
+        </div>
+        <div class="email-section">
+          <h4>Email Templates</h4>
+          <div class="email-tabs">${Object.keys(TEMPLATES).map((t,i)=>`<div class="email-tab" onclick="showTemplate(${p.id},'${t}',this)">${t}</div>`).join('')}</div>
+          <div class="email-body" id="tpl-${p.id}"></div>
+          <button class="copy-btn" id="copy-${p.id}" onclick="copyTemplate(${p.id})">Copy to Clipboard</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCard(id){document.getElementById('pc-'+id).classList.toggle('open')}
+
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+const logTypes={};
+function selectLogType(id,type,el){
+  logTypes[id]=type;
+  el.parentElement.querySelectorAll('.log-btn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('log-sub-'+id).disabled=false;
+}
+
+async function submitLog(id){
+  const type=logTypes[id];
+  if(!type)return;
+  const note=document.getElementById('log-note-'+id).value;
+  const p=prospects.find(x=>x.id===id);
+  const btn=document.getElementById('log-sub-'+id);
+  btn.disabled=true;btn.textContent='Saving...';
+
+  await sbPost('activity_log',{
+    prospect_id:id,
+    type:type,
+    note:note||'',
+    prospect_name:p?p.name:'',
+    created_at:new Date().toISOString()
+  });
+
+  // Update touchpoints
+  let tp=parseTouchpoints(p?p.touchpoints:'[]');
+  tp.push({type:type,note:note,at:new Date().toISOString()});
+  await sbPatch('Prospects',id,{touchpoints:JSON.stringify(tp)});
+
+  btn.textContent='Logged';
+  document.getElementById('log-note-'+id).value='';
+  delete logTypes[id];
+  document.getElementById('log-btns-'+id).querySelectorAll('.log-btn').forEach(b=>b.classList.remove('selected'));
+  setTimeout(()=>{btn.textContent='Log Activity';btn.disabled=true},1500);
+  loadFeed();
+  loadProspects();
+}
+
+async function setStatus(id,status){
+  await sbPatch('Prospects',id,{status:status});
+  await sbPost('activity_log',{
+    prospect_id:id,
+    type:'status_change',
+    note:'Status changed to '+status,
+    prospect_name:prospects.find(p=>p.id===id)?.name||'',
+    created_at:new Date().toISOString()
+  });
+  loadProspects();
+  loadFeed();
+}
+
+function parseTouchpoints(tp){
+  if(!tp)return[];
+  if(typeof tp==='string'){try{return JSON.parse(tp)}catch(e){return[]}}
+  return Array.isArray(tp)?tp:[];
+}
+
+function showTemplate(id,name,el){
+  const p=prospects.find(x=>x.id===id);
+  let tpl=TEMPLATES[name]||'';
+  tpl=tpl.replace(/\{\{name\}\}/g,p?p.name:'').replace(/\{\{type\}\}/g,p?(p.type||''):'').replace(/\{\{city\}\}/g,p?(p.city||''):'');
+  const body=document.getElementById('tpl-'+id);
+  const copy=document.getElementById('copy-'+id);
+  el.parentElement.querySelectorAll('.email-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  body.textContent=tpl;
+  body.classList.add('visible');
+  copy.style.display='inline-block';
+  copy.dataset.text=tpl;
+}
+
+function copyTemplate(id){
+  const btn=document.getElementById('copy-'+id);
+  navigator.clipboard.writeText(btn.dataset.text||'').then(()=>{
+    btn.textContent='Copied';
+    setTimeout(()=>btn.textContent='Copy to Clipboard',1500);
+  });
+}
+
+// Activity feed
+async function loadFeed(){
+  const items=await sbGet('activity_log','?select=*&order=id.desc&limit=30');
+  const el=document.getElementById('feed-list');
+  if(!items.length){el.innerHTML='<div class="feed-empty">No activity yet</div>';return}
+  el.innerHTML=items.map(i=>{
+    const d=i.created_at?new Date(i.created_at):null;
+    const ts=d?d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'';
+    return `<div class="feed-item">
+      <span class="feed-time">${ts}</span>
+      <span class="feed-type">${esc(i.type||'')}</span>
+      <span class="feed-text">${esc(i.prospect_name||'')}${i.note?' -- '+esc(i.note):''}</span>
+    </div>`;
+  }).join('');
+}
+</script>
+</body>
+</html>
